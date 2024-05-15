@@ -1,11 +1,11 @@
-const express = require('express');
+const express = require("express");
+const cors = require("cors");
+
 const app = express();
-const port = 3001; // Use a different port from the Next.js frontend
+app.use(cors());
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.get("/", (req, res) => {
+  res.send("Hello World");
 });
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+module.exports = app;
