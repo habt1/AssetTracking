@@ -3,20 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 224, 87, 103;
+  --background-end-rgb: 192, 74, 90;
 }
 
 body {
+  margin: 0;
+  font-family: Inter, sans-serif;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
@@ -26,8 +20,189 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+input {
+  color: black; /* Add this line to ensure input text is black */
+}
+
+button {
+  cursor: pointer;
+  background-color: white;
+  color: black; /* Ensure button text is black */
+}
+
+button:hover {
+  background-color: #f0f0f0;
+  color: black; /* Ensure button text remains black on hover */
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.p-8 {
+  padding: 2rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-12 {
+  margin-bottom: 3rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.bg-gray-100 {
+  background-color: #f7fafc;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.text-red-600 {
+  color: #E05767;
+}
+
+.text-black {
+  color: #000000;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-b {
+  border-bottom-width: 1px;
+}
+
+.text-gray-600 {
+  color: #718096;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.grid {
+  display: grid;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.rounded {
+  border-radius: 0.375rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.col-span-2 {
+  grid-column: span 2 / span 2;
+}
+
+.border-t {
+  border-top: 1px solid #d1d5db;
+}
+
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.h-10 {
+  height: 2.5rem;
+}
+
+.w-32 {
+  width: 8rem;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.hover\:bg-red-700:hover {
+  background-color: #c53030;
 }

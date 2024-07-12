@@ -1,3 +1,4 @@
+require('dotenv').config();
 const cors = require('cors');
 const app = require('./app');
 
@@ -5,7 +6,7 @@ const app = require('./app');
 app.use(cors());
 
 // Start the server
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
