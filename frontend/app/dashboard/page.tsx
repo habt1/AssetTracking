@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import dynamic from 'next/dynamic';
-import { getUserInfo } from './serverActions';
 import axios from 'axios';
+import { getUserInfo } from "./serverActions";
 
+const LocationForm = dynamic(() => import('./LocationForm'), { ssr: false });
 const EquipmentForm = dynamic(() => import('./EquipmentForm'), { ssr: false });
 
 export default function Dashboard() {
@@ -12,10 +13,12 @@ export default function Dashboard() {
   const [allSerials, setAllSerials] = useState([]);
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [serialSuggestions, setSerialSuggestions] = useState([]);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [selectedSerial, setSelectedSerial] = useState<any | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -27,7 +30,8 @@ export default function Dashboard() {
         },
       });
 
-      fetchCustomersAndSerials();
+      await fetchCustomersAndSerials();
+      setLoading(false);
     }
     fetchInitialData();
   }, []);
@@ -40,14 +44,13 @@ export default function Dashboard() {
     setAllSerials(serialRes.data);
   };
 
-
-  const filterCustomerSuggestions = (query: string) => { // Add type annotation to query parameter
+  const filterCustomerSuggestions = (query: string) => {
     setCustomerName(query);
     if (query === "") {
       setCustomerSuggestions([]);
     } else {
-      const filtered = allCustomers.filter((customer: string) => // Add type annotation to customer parameter
-        customer.toLowerCase().startsWith(query.toLowerCase())
+      const filtered = allCustomers.filter((customer: any) =>
+        customer.name.toLowerCase().includes(query.toLowerCase())
       );
       setCustomerSuggestions(filtered);
     }
@@ -59,13 +62,13 @@ export default function Dashboard() {
       setSerialSuggestions([]);
     } else {
       const filtered = allSerials.filter((serial: string) =>
-        serial.toLowerCase().startsWith(query.toLowerCase())
+        serial.toLowerCase().includes(query.toLowerCase())
       );
       setSerialSuggestions(filtered);
     }
   };
 
-  const handleAddCustomer = async (e) => {
+  const handleAddCustomer = async (e: any) => {
     e.preventDefault();
     const customer = {
       uniqueUserId: userId,
@@ -83,76 +86,105 @@ export default function Dashboard() {
         'Content-Type': 'application/json',
       },
     });
-    await fetchCustomersAndSerials(); // Re-fetch customers to include the new one
-    setSelectedCustomer(customer.name); // Set the selected customer after adding
-  };
-
-  const handleSelectCustomer = (customer: string) => {
+    await fetchCustomersAndSerials();
     setSelectedCustomer(customer);
   };
 
-  if (selectedCustomer) {
+  const handleSelectCustomer = (customer: any) => {
+    setSelectedCustomer(customer);
+  };
+
+  const handleSelectSerial = (serial: string) => {
+    setSelectedSerial(serial);
+  };
+
+  if (loading) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
-        <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
-          <EquipmentForm />
-          <div className="mt-4 flex justify-between">
-            <button
-              className="h-10 w-32 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700"
-              onClick={() => setSelectedCustomer(null)} // Go back to the initial screen
-            >
-              Back
-            </button>
-          </div>
+        <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg text-center">
+          <p className="text-black">Loading...</p>
         </div>
       </main>
     );
   }
 
+  if (selectedCustomer) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
+        <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
+          <LocationForm userId={userId} customer={selectedCustomer} />
+        </div>
+      </main>
+    );
+  }
+
+  // if (selectedSerial) {
+  //   return (
+  //     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
+  //       <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
+  //         <EquipmentForm userId={userId} serialNumber={selectedSerial} />
+  //       </div>
+  //     </main>
+  //   );
+  // } TODO
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
       <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
-        <div className="mb-6 text-center">
-          <input
-            type="text"
-            placeholder="Search Customer"
-            value={customerName}
-            onChange={(e) => filterCustomerSuggestions(e.target.value)}
-            className="mb-4 p-2 border rounded w-1/2"
-          />
-          <ul className="mb-4">
-            {customerSuggestions.map((customer, index) => (
-              <li key={index} onClick={() => handleSelectCustomer(customer)} className="cursor-pointer text-black">
-                {customer}
-              </li>
-            ))}
-          </ul>
-          <input
-            type="text"
-            placeholder="Search Serial Number"
-            value={serialNumber}
-            onChange={(e) => filterSerialSuggestions(e.target.value)}
-            className="mb-4 p-2 border rounded w-1/2"
-          />
-          <ul className="mb-4">
-            {serialSuggestions.map((serial, index) => (
-              <li key={index} className="text-black">{serial}</li>
-            ))}
-          </ul>
+        <div className="flex justify-center mb-6">
+          <div className="relative mr-4">
+            <input
+              type="text"
+              placeholder="Search Customer"
+              value={customerName}
+              onChange={(e) => filterCustomerSuggestions(e.target.value)}
+              className="mb-4 p-2 border rounded w-64"
+            />
+            {customerSuggestions.length > 0 && (
+              <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded mt-1 z-10 text-black">
+                {customerSuggestions.map((customer: any, index) => (
+                  <li
+                    key={index}
+                    onClick={() => handleSelectCustomer(customer)}
+                    className="dropdown-item"
+                  >
+                    {customer.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search Serial Number"
+              value={serialNumber}
+              onChange={(e) => filterSerialSuggestions(e.target.value)}
+              className="mb-4 p-2 border rounded w-64"
+            />
+            {serialSuggestions.length > 0 && (
+              <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded mt-1 z-10 text-black">
+                {serialSuggestions.map((serial: string, index) => (
+                  <li key={index} onClick={() => handleSelectSerial(serial)} className="dropdown-item">
+                    {serial}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
         <div className="text-center">
-          <h2 className="text-black">Add Customer</h2>
           <form onSubmit={handleAddCustomer} className="grid grid-cols-1 gap-4">
-            <input name="name" placeholder="Name" required className="p-2 border rounded w-full"/>
-            <input name="address" placeholder="Address" required className="p-2 border rounded w-full"/>
-            <input name="city" placeholder="City" required className="p-2 border rounded w-full"/>
-            <input name="state" placeholder="State" required className="p-2 border rounded w-full"/>
-            <input name="zip" placeholder="Zip Code" required className="p-2 border rounded w-full"/>
-            <input name="contact" placeholder="Contact" required className="p-2 border rounded w-full"/>
-            <input name="contactEmail" placeholder="Contact Email" required className="p-2 border rounded w-full"/>
-            <input name="contactPhone" placeholder="Contact Phone" required className="p-2 border rounded w-full"/>
-            <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 mx-auto">
-              Submit
+            <input name="name" placeholder="Customer Name" required className="p-2 border rounded w-full" />
+            <input name="address" placeholder="Customer Address" required className="p-2 border rounded w-full" />
+            <input name="city" placeholder="Customer City" required className="p-2 border rounded w-full" />
+            <input name="state" placeholder="Customer State" required className="p-2 border rounded w-full" />
+            <input name="zip" placeholder="Customer Zip Code" required className="p-2 border rounded w-full" />
+            <input name="contact" placeholder="Customer Contact" required className="p-2 border rounded w-full" />
+            <input name="contactEmail" placeholder="Contact Email" required className="p-2 border rounded w-full" />
+            <input name="contactPhone" placeholder="Contact Phone" required className="p-2 border rounded w-full" />
+            <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
+              Add Customer
             </button>
           </form>
           <LogoutLink postLogoutRedirectURL="/" className="mt-4 text-red-600">
