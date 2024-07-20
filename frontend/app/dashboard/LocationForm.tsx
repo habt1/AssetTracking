@@ -115,11 +115,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
 
   if (selectedLocation) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
-        <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
-          <EquipmentForm userId={userId} customer={customer} location={selectedLocation} />
-        </div>
-      </main>
+        <EquipmentForm userId={userId} customer={customer} location={selectedLocation} />
     );
   }
 

@@ -7,6 +7,7 @@ import { getUserInfo } from "./serverActions";
 
 const LocationForm = dynamic(() => import('./LocationForm'), { ssr: false });
 const EquipmentForm = dynamic(() => import('./EquipmentForm'), { ssr: false });
+const ServiceForm = dynamic(() => import('./ServiceForm'), { ssr: false });
 
 export default function Dashboard() {
   const [allCustomers, setAllCustomers] = useState([]);
@@ -94,8 +95,18 @@ export default function Dashboard() {
     setSelectedCustomer(customer);
   };
 
-  const handleSelectSerial = (serial: string) => {
-    setSelectedSerial(serial);
+  const handleSelectSerial = async (serial: string) => {
+    const res = await axios.post('http://localhost:3001/getEquipmentBySerial', {
+      uniqueUserId: userId,
+      serial
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const { equipment, location, customer } = res.data;
+    setSelectedSerial({ equipment, location, customer });
   };
 
   if (loading) {
@@ -118,15 +129,16 @@ export default function Dashboard() {
     );
   }
 
-  // if (selectedSerial) {
-  //   return (
-  //     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
-  //       <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
-  //         <EquipmentForm userId={userId} serialNumber={selectedSerial} />
-  //       </div>
-  //     </main>
-  //   );
-  // } TODO
+  if (selectedSerial) {
+    const { equipment, location, customer } = selectedSerial;
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">
+        <div className="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg">
+          <ServiceForm userId={userId} equipment={equipment} location={location} customer={customer} />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-8 relative">

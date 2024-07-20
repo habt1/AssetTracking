@@ -231,6 +231,215 @@ const updateEquipment = async (equipment) => {
   }
 };
 
+const getEquipmentBySerial = async (uniqueUserId, serial) => {
+  const params = {
+    TableName: 'EquipmentTable',
+    FilterExpression: 'uniqueUserId = :uid AND serial = :serial',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId,
+      ':serial': serial,
+    }
+  };
+
+  try {
+    const data = await docClient.scan(params).promise();
+    if (data.Items.length === 0) {
+      throw new Error('Equipment not found');
+    }
+    return data.Items[0];
+  } catch (err) {
+    console.error('Unable to fetch equipment by serial. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const getLocationById = async (uniqueUserId, locationId) => {
+  const params = {
+    TableName: 'LocationTable',
+    KeyConditionExpression: 'uniqueUserId = :uid AND customerIdlocationId = :lid',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId,
+      ':lid': locationId
+    }
+  };
+
+  try {
+    const data = await docClient.query(params).promise();
+    if (data.Items.length === 0) {
+      throw new Error('Location not found');
+    }
+    return data.Items[0];
+  } catch (err) {
+    console.error('Unable to fetch location. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const getCustomerById = async (uniqueUserId, customerId) => {
+  const params = {
+    TableName: 'CustomerTable',
+    KeyConditionExpression: 'uniqueUserId = :uid AND customerId = :cid',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId,
+      ':cid': customerId
+    }
+  };
+
+  try {
+    const data = await docClient.query(params).promise();
+    if (data.Items.length === 0) {
+      throw new Error('Customer not found');
+    }
+    return data.Items[0];
+  } catch (err) {
+    console.error('Unable to fetch customer. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const getServicesByEquipment = async (uniqueUserId, equipmentId) => {
+  const params = {
+    TableName: 'ServiceTable',
+    KeyConditionExpression: 'uniqueUserId = :uid AND begins_with(equipmentIdserviceId, :eid)',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId,
+      ':eid': equipmentId + '|'
+    }
+  };
+
+  try {
+    const data = await docClient.query(params).promise();
+    return data.Items;
+  } catch (err) {
+    console.error('Unable to fetch services. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const addService = async (service) => {
+  const params = {
+    TableName: 'ServiceTable',
+    Item: {
+      uniqueUserId: service.uniqueUserId,
+      equipmentIdserviceId: service.equipmentIdserviceId,
+      ...service  // Include all service fields in the Item
+    }
+  };
+
+  try {
+    await docClient.put(params).promise();
+  } catch (err) {
+    console.error('Unable to add service. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const updateService = async (service) => {
+  const params = {
+    TableName: 'ServiceTable',
+    Key: {
+      uniqueUserId: service.uniqueUserId,
+      equipmentIdserviceId: service.equipmentIdserviceId,
+    },
+    UpdateExpression: `set 
+      serviceDateIn = :serviceDateIn,
+      equipmentId = :equipmentId,
+      rma = :rma,
+      orderNum = :orderNum,
+      po = :po,
+      technician = :technician,
+      issue = :issue,
+      serviceDateReceived = :serviceDateReceived,
+      returnDate = :returnDate,
+      shipMethod = :shipMethod,
+      tracking = :tracking,
+      deactivated = :deactivated`,
+    ExpressionAttributeValues: {
+      ':serviceDateIn': service.serviceDateIn,
+      ':equipmentId': service.equipmentId,
+      ':rma': service.rma,
+      ':orderNum': service.orderNum,
+      ':po': service.po,
+      ':technician': service.technician,
+      ':issue': service.issue,
+      ':serviceDateReceived': service.serviceDateReceived,
+      ':returnDate': service.returnDate,
+      ':shipMethod': service.shipMethod,
+      ':tracking': service.tracking,
+      ':deactivated': service.deactivated,
+    },
+    ReturnValues: 'UPDATED_NEW'
+  };
+
+  try {
+    await docClient.update(params).promise();
+  } catch (err) {
+    console.error('Unable to update service. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const getContractsByEquipment = async (uniqueUserId, equipmentId) => {
+  const params = {
+    TableName: 'ContractTable',
+    KeyConditionExpression: 'uniqueUserId = :uid AND begins_with(equipmentIdcontractId, :eid)',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId,
+      ':eid': equipmentId + '|'
+    }
+  };
+
+  try {
+    const data = await docClient.query(params).promise();
+    return data.Items;
+  } catch (err) {
+    console.error('Unable to fetch contracts. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const addContract = async (contract) => {
+  const params = {
+    TableName: 'ContractTable',
+    Item: {
+      uniqueUserId: contract.uniqueUserId,
+      equipmentIdcontractId: contract.equipmentIdcontractId,
+      ...contract  // Include all contract fields in the Item
+    }
+  };
+
+  try {
+    await docClient.put(params).promise();
+  } catch (err) {
+    console.error('Unable to add contract. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const updateContract = async (contract) => {
+  const params = {
+    TableName: 'ContractTable',
+    Key: {
+      uniqueUserId: contract.uniqueUserId,
+      equipmentIdcontractId: contract.equipmentIdcontractId,
+    },
+    UpdateExpression: `set 
+      po = :po,
+      orderNum = :orderNum,
+      technician = :technician,
+      term = :term,
+      startDate = :startDate,
+      deactivated = :deactivated`,
+    ExpressionAttributeValues: {
+      ':po': contract.po,
+      ':orderNum': contract.orderNum,
+      ':technician': contract.technician,
+      ':term': contract.term,
+      ':startDate': contract.startDate,
+      ':deactivated': contract.deactivated,
+    },
+    ReturnValues: 'UPDATED_NEW'
+  };
+
+  try {
+    await docClient.update(params).promise();
+  } catch (err) {
+    console.error('Unable to update contract. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
 module.exports = {
   addUser,
   getAllCustomers,
@@ -241,5 +450,14 @@ module.exports = {
   getEquipmentByLocation,
   addEquipment,
   updateLocation,
-  updateEquipment
+  updateEquipment,
+  getEquipmentBySerial,
+  getLocationById,
+  getCustomerById,
+  getServicesByEquipment,
+  addService,
+  updateService,
+  getContractsByEquipment,
+  addContract,
+  updateContract
 };

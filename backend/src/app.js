@@ -121,4 +121,86 @@ app.post("/updateEquipment", async (req, res) => {
   }
 });
 
+app.post("/updateService", async (req, res) => {
+  const { service } = req.body;
+  try {
+    await Promise.all(service.map(item => db.updateService(item)));
+    res.status(200).send('Service updated successfully');
+  } catch (error) {
+    console.error('Error updating service:', error);
+    res.status(500).send('Error updating service');
+  }
+});
+
+app.post("/getEquipmentBySerial", async (req, res) => {
+  const { uniqueUserId, serial } = req.body;
+  try {
+    const equipment = await db.getEquipmentBySerial(uniqueUserId, serial);
+    const locationId = equipment.locationId;
+    const location = await db.getLocationById(uniqueUserId, locationId);
+    const customerId = location.customerId;
+    const customer = await db.getCustomerById(uniqueUserId, customerId);
+
+    res.status(200).send({ equipment, location, customer });
+  } catch (error) {
+    console.error('Error fetching equipment by serial:', error);
+    res.status(500).send('Error fetching equipment by serial');
+  }
+});
+
+app.post("/getServicesByEquipment", async (req, res) => {
+  const { uniqueUserId, equipmentId } = req.body;
+  try {
+    const services = await db.getServicesByEquipment(uniqueUserId, equipmentId);
+    res.status(200).send(services);
+  } catch (error) {
+    console.error('Error fetching services by equipment:', error);
+    res.status(500).send('Error fetching services by equipment');
+  }
+});
+
+app.post("/addService", async (req, res) => {
+  const service = req.body;
+  try {
+    await db.addService(service);
+    res.status(200).send('Service added successfully');
+  } catch (error) {
+    console.error('Error adding service:', error);
+    res.status(500).send('Error adding service');
+  }
+});
+
+app.post("/getContractsByEquipment", async (req, res) => {
+  const { uniqueUserId, equipmentId } = req.body;
+  try {
+    const contracts = await db.getContractsByEquipment(uniqueUserId, equipmentId);
+    res.status(200).send(contracts);
+  } catch (error) {
+    console.error('Error fetching contracts by equipment:', error);
+    res.status(500).send('Error fetching contracts by equipment');
+  }
+});
+
+app.post("/addContract", async (req, res) => {
+  const contract = req.body;
+  try {
+    await db.addContract(contract);
+    res.status(200).send('Contract added successfully');
+  } catch (error) {
+    console.error('Error adding contract:', error);
+    res.status(500).send('Error adding contract');
+  }
+});
+
+app.post("/updateContract", async (req, res) => {
+  const { contracts } = req.body;
+  try {
+    await Promise.all(contracts.map(contract => db.updateContract(contract)));
+    res.status(200).send('Contracts updated successfully');
+  } catch (error) {
+    console.error('Error updating contracts:', error);
+    res.status(500).send('Error updating contracts');
+  }
+});
+
 module.exports = app;
