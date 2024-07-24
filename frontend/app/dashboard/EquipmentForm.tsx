@@ -210,9 +210,9 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       <ToastContainer />
-      <div className="flex justify-center mb-4 space-x-8">
+      <div className="justify-header mb-4">
         <div className="text-center mx-4">
           <h1 className="text-2xl font-bold text-black">Customer: {customer.name}</h1>
           <p className="text-lg text-black">{customer.address}, {customer.city}, {customer.state}, {customer.zip}</p>
@@ -232,8 +232,8 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
       <table className="w-full text-black mb-4">
         <thead>
           <tr>
-            <th className="border px-4 py-2">Service</th>
-            <th className="border px-4 py-2">Contract</th>
+            <th className="border px-4 py-2"></th>
+            <th className="border px-4 py-2"></th>
             <th className="border px-4 py-2">Make</th>
             <th className="border px-4 py-2">Model</th>
             <th className="border px-4 py-2">Configuration #</th>
@@ -256,7 +256,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
                   {!item.deactivated && (
                     <button
                       onClick={() => handleServiceClick(item)}
-                      className="h-8 w-24 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                      className="h-8 w-24 rounded-lg table-button bg-blue-600 font-semibold hover:bg-blue-700"
                     >
                       Service
                     </button>
@@ -266,7 +266,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
                   {!item.deactivated && (
                     <button
                       onClick={() => handleContractClick(item)}
-                      className="h-8 w-24 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700"
+                      className="h-8 w-24 rounded-lg table-button bg-green-600 font-semibold hover:bg-green-700"
                     >
                       Contract
                     </button>
@@ -348,7 +348,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
       <div className="flex justify-center">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
@@ -367,12 +367,12 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
           <label className="block text-sm text-black font-medium">EOL Date</label>
           <input name="eolDate" value={eolDate} onChange={(e) => setEolDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
         </div>
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 mx-auto">
+        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
           Add Equipment
         </button>
       </form>
       <button
-        className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 mx-auto"
+        className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto"
         onClick={() => window.location.href = "/dashboard"}
       >
         Back

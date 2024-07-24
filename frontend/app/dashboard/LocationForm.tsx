@@ -157,7 +157,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                   {!location.deactivated && (
                     <button
                       onClick={() => setSelectedLocation(location)}
-                      className="h-8 w-24 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                      className="h-8 w-24 rounded-lg table-button bg-blue-600 font-semibold hover:bg-blue-700"
                     >
                       Select
                     </button>
@@ -250,7 +250,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
       <div className="flex justify-center">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
@@ -265,12 +265,12 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
         <input name="locationContact" placeholder="Location Contact" value={locationContact} onChange={(e) => setLocationContact(e.target.value)} required className="p-2 border rounded w-full" />
         <input name="locationEmail" placeholder="Location Email" value={locationContactEmail} onChange={(e) => setLocationContactEmail(e.target.value)} required className="p-2 border rounded w-full" />
         <input name="locationPhone" placeholder="Location Phone" value={locationContactPhone} onChange={(e) => setLocationContactPhone(e.target.value)} required className="p-2 border rounded w-full" />
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 mx-auto">
+        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
           Add Location
         </button>
       </form>
       <button
-        className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 mx-auto"
+        className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto"
         onClick={() => window.location.href = "/dashboard"}
       >
         Back

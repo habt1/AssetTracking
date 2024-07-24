@@ -150,7 +150,7 @@ export default function Dashboard() {
               placeholder="Search Customer"
               value={customerName}
               onChange={(e) => filterCustomerSuggestions(e.target.value)}
-              className="mb-4 p-2 border rounded w-64"
+              className="mb-4 p-2 search-border rounded w-64"
             />
             {customerSuggestions.length > 0 && (
               <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded mt-1 z-10 text-black">
@@ -172,7 +172,7 @@ export default function Dashboard() {
               placeholder="Search Serial Number"
               value={serialNumber}
               onChange={(e) => filterSerialSuggestions(e.target.value)}
-              className="mb-4 p-2 border rounded w-64"
+              className="mb-4 p-2 search-border rounded w-64"
             />
             {serialSuggestions.length > 0 && (
               <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded mt-1 z-10 text-black">

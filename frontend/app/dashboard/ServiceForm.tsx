@@ -167,7 +167,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
   return (
     <div className="space-y-4">
       <ToastContainer />
-      <div className="flex justify-center mb-4 space-x-8 text-center">
+      <div className="flex justify-header mb-4 space-x-8 text-center">
         <div className="mx-4 flex-grow">
           <h1 className="text-2xl font-bold text-black">Customer: {customer.name}</h1>
           <p className="text-lg text-black">{customer.address}, {customer.city}, {customer.state}, {customer.zip}</p>
@@ -320,7 +320,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
       <div className="flex justify-center">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
@@ -346,19 +346,19 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
         </div>
         <input name="shipMethod" placeholder="Ship Method" value={shipMethod} onChange={(e) => setShipMethod(e.target.value)} required className="p-2 border rounded w-full" />
         <input name="tracking" placeholder="Tracking #" value={tracking} onChange={(e) => setTracking(e.target.value)} required className="p-2 border rounded w-full" />
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4 mx-auto">
+        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
           Add Service
         </button>
       </form>
       <div className="flex flex-col items-center">
         <button
-          className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4"
+          className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4"
           onClick={() => setBackToEquipment(true)}
         >
           Back to Equipment
         </button>
         <button
-          className="h-10 w-48 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 mt-4"
+          className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4"
           onClick={() => window.location.href = "/dashboard"}
         >
           Back to Dashboard
