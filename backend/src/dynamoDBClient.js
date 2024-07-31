@@ -25,6 +25,7 @@ const addUser = async ({ id, name, email }) => {
 };
 
 const getAllCustomers = async (uniqueUserId) => {
+  console.log("Unique User ID: ", uniqueUserId);
   const params = {
     TableName: 'CustomerTable',
     Item: {
@@ -41,6 +42,7 @@ const getAllCustomers = async (uniqueUserId) => {
 };
 
 const getAllSerials = async (uniqueUserId) => {
+  console.log("Unique User ID: ", uniqueUserId);
   const params = {
     TableName: 'EquipmentTable',
     Item: {

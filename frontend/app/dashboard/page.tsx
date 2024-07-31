@@ -6,7 +6,6 @@ import axios from 'axios';
 import { getUserInfo } from "./serverActions";
 
 const LocationForm = dynamic(() => import('./LocationForm'), { ssr: false });
-const EquipmentForm = dynamic(() => import('./EquipmentForm'), { ssr: false });
 const ServiceForm = dynamic(() => import('./ServiceForm'), { ssr: false });
 
 export default function Dashboard() {
@@ -31,11 +30,16 @@ export default function Dashboard() {
         },
       });
 
-      await fetchCustomersAndSerials();
       setLoading(false);
     }
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchCustomersAndSerials();
+    }
+  }, [userId]);
 
   const fetchCustomersAndSerials = async () => {
     const customerRes = await axios.post('http://localhost:3001/getAllCustomers', {
@@ -55,7 +59,6 @@ export default function Dashboard() {
         'Content-Type': 'application/json',
       },
     });
-    setAllCustomers(customerRes.data);
     setAllSerials(serialRes.data);
   };
 
