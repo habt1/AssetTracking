@@ -24,9 +24,12 @@ const addUser = async ({ id, name, email }) => {
   }
 };
 
-const getAllCustomers = async () => {
+const getAllCustomers = async (uniqueUserId) => {
   const params = {
     TableName: 'CustomerTable',
+    Item: {
+      uniqueUserId: uniqueUserId
+    }
   };
 
   try {
@@ -37,9 +40,12 @@ const getAllCustomers = async () => {
   }
 };
 
-const getAllSerials = async () => {
+const getAllSerials = async (uniqueUserId) => {
   const params = {
     TableName: 'EquipmentTable',
+    Item: {
+      uniqueUserId: uniqueUserId
+    }
   };
 
   try {

@@ -24,9 +24,10 @@ app.post("/addUser", async (req, res) => {
   }
 });
 
-app.get("/getAllCustomers", async (req, res) => {
+app.post("/getAllCustomers", async (req, res) => {
+  const uniqueUserId = req.body;
   try {
-    const customers = await db.getAllCustomers();
+    const customers = await db.getAllCustomers(uniqueUserId);
     res.status(200).send(customers);
   } catch (error) {
     console.error('Error fetching customers:', error);
@@ -34,9 +35,10 @@ app.get("/getAllCustomers", async (req, res) => {
   }
 });
 
-app.get("/getAllSerials", async (req, res) => {
+app.post("/getAllSerials", async (req, res) => {
+  const uniqueUserId = req.body;
   try {
-    const serials = await db.getAllSerials();
+    const serials = await db.getAllSerials(uniqueUserId);
     res.status(200).send(serials);
   } catch (error) {
     console.error('Error fetching serials:', error);

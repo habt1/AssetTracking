@@ -38,10 +38,24 @@ export default function Dashboard() {
   }, []);
 
   const fetchCustomersAndSerials = async () => {
-    const customerRes = await axios.get('http://localhost:3001/getAllCustomers');
+    const customerRes = await axios.post('http://localhost:3001/getAllCustomers', {
+      uniqueUserId: userId
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     setAllCustomers(customerRes.data);
 
-    const serialRes = await axios.get('http://localhost:3001/getAllSerials');
+
+    const serialRes = await axios.post('http://localhost:3001/getAllSerials', {
+      uniqueUserId: userId
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    setAllCustomers(customerRes.data);
     setAllSerials(serialRes.data);
   };
 
