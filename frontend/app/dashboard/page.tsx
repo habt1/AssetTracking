@@ -66,25 +66,30 @@ export default function Dashboard() {
     setCustomerName(query);
     if (query === "") {
       setCustomerSuggestions([]);
-    } else {
+    } else if (allCustomers && allCustomers.length > 0) {
       const filtered = allCustomers.filter((customer: any) =>
         customer.name.toLowerCase().includes(query.toLowerCase())
       );
       setCustomerSuggestions(filtered);
+    } else {
+      setCustomerSuggestions([]);
     }
   };
-
+  
   const filterSerialSuggestions = (query: string) => {
     setSerialNumber(query);
     if (query === "") {
       setSerialSuggestions([]);
-    } else {
+    } else if (allSerials && allSerials.length > 0) {
       const filtered = allSerials.filter((serial: string) =>
         serial.toLowerCase().includes(query.toLowerCase())
       );
       setSerialSuggestions(filtered);
+    } else {
+      setSerialSuggestions([]);
     }
   };
+  
 
   const handleAddCustomer = async (e: any) => {
     e.preventDefault();

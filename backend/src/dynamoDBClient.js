@@ -25,16 +25,16 @@ const addUser = async ({ id, name, email }) => {
 };
 
 const getAllCustomers = async (uniqueUserId) => {
-  console.log("Unique User ID: ", uniqueUserId);
   const params = {
     TableName: 'CustomerTable',
-    Item: {
-      uniqueUserId: uniqueUserId
+    KeyConditionExpression: 'uniqueUserId = :uid',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId.uniqueUserId
     }
   };
 
   try {
-    const data = await docClient.scan(params).promise();
+    const data = await docClient.query(params).promise();
     return data.Items;
   } catch (err) {
     console.error('Unable to fetch customers. Error JSON:', JSON.stringify(err, null, 2));
@@ -42,21 +42,22 @@ const getAllCustomers = async (uniqueUserId) => {
 };
 
 const getAllSerials = async (uniqueUserId) => {
-  console.log("Unique User ID: ", uniqueUserId);
   const params = {
-    TableName: 'EquipmentTable',
-    Item: {
-      uniqueUserId: uniqueUserId
+    TableName: 'CustomerTable',
+    KeyConditionExpression: 'uniqueUserId = :uid',
+    ExpressionAttributeValues: {
+      ':uid': uniqueUserId.uniqueUserId
     }
   };
 
   try {
-    const data = await docClient.scan(params).promise();
+    const data = await docClient.query(params).promise();
     return data.Items.map(item => item.serial);
   } catch (err) {
     console.error('Unable to fetch serials. Error JSON:', JSON.stringify(err, null, 2));
   }
 };
+
 
 const addCustomer = async (customer) => {
   const customerId = [
