@@ -139,7 +139,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
 
   const handleInputChange = (index: number, field: keyof Contract, value: string | number) => {
     const updatedContracts = [...contracts];
-    updatedContracts[index][field] = value;
+    (updatedContracts[index][field] as string | number) = value;
     if (field === 'startDate' || field === 'term') {
       updatedContracts[index].endDate = calculateEndDate(updatedContracts[index].startDate, updatedContracts[index].term);
       updatedContracts[index].reminder30Day = calculateReminderDate(updatedContracts[index].startDate, updatedContracts[index].term, 30);

@@ -43,7 +43,7 @@ const getAllCustomers = async (uniqueUserId) => {
 
 const getAllSerials = async (uniqueUserId) => {
   const params = {
-    TableName: 'CustomerTable',
+    TableName: 'EquipmentTable',
     KeyConditionExpression: 'uniqueUserId = :uid',
     ExpressionAttributeValues: {
       ':uid': uniqueUserId.uniqueUserId

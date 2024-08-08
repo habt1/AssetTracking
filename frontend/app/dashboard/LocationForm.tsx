@@ -99,7 +99,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
 
   const handleInputChange = (index: number, field: keyof Location, value: string) => {
     const updatedLocations = [...locations];
-    updatedLocations[index][field] = value;
+    (updatedLocations[index][field] as string | number) = value;
     setLocations(updatedLocations);
     setHasChanges(true);
     setChangedRows(prev => new Set(prev).add(index));

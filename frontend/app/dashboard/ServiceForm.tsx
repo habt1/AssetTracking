@@ -131,7 +131,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
 
   const handleInputChange = (index: number, field: keyof Service, value: string) => {
     const updatedServices = [...services];
-    updatedServices[index][field] = value;
+    (updatedServices[index][field] as string | number) = value;
     setServices(updatedServices);
     setHasChanges(true);
     setChangedRows(prev => new Set(prev).add(index));

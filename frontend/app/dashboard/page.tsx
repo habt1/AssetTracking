@@ -81,6 +81,7 @@ export default function Dashboard() {
     if (query === "") {
       setSerialSuggestions([]);
     } else if (allSerials && allSerials.length > 0) {
+      console.log("serials", allSerials)
       const filtered = allSerials.filter((serial: string) =>
         serial.toLowerCase().includes(query.toLowerCase())
       );

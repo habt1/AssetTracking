@@ -163,7 +163,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
 
   const handleInputChange = (index: number, field: keyof Equipment, value: string) => {
     const updatedEquipment = [...equipment];
-    updatedEquipment[index][field] = value;
+    (updatedEquipment[index][field] as string | number) = value;
     setEquipment(updatedEquipment);
     setHasChanges(true);
     setChangedRows(prev => new Set(prev).add(index));
