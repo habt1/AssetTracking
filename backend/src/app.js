@@ -57,6 +57,17 @@ app.post("/addCustomer", async (req, res) => {
   }
 });
 
+app.post("/updateCustomer", async (req, res) => {
+  const { uniqueUserId, customerId, updates } = req.body;
+  try {
+    await db.updateCustomer(uniqueUserId, customerId, updates);
+    res.status(200).send('Customer updated successfully');
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    res.status(500).send('Error updating customer');
+  }
+});
+
 app.post("/addLocation", async (req, res) => {
   const location = req.body;
   try {
@@ -172,14 +183,14 @@ app.post("/addService", async (req, res) => {
   }
 });
 
-app.post("/getContractsByEquipment", async (req, res) => {
+app.post("/getContractByEquipment", async (req, res) => {
   const { uniqueUserId, equipmentId } = req.body;
   try {
-    const contracts = await db.getContractsByEquipment(uniqueUserId, equipmentId);
-    res.status(200).send(contracts);
+    const contract = await db.getContractByEquipment(uniqueUserId, equipmentId);
+    res.status(200).send(contract);
   } catch (error) {
-    console.error('Error fetching contracts by equipment:', error);
-    res.status(500).send('Error fetching contracts by equipment');
+    console.error('Error fetching contract by equipment:', error);
+    res.status(500).send('Error fetching contract by equipment');
   }
 });
 
@@ -202,6 +213,17 @@ app.post("/updateContract", async (req, res) => {
   } catch (error) {
     console.error('Error updating contracts:', error);
     res.status(500).send('Error updating contracts');
+  }
+});
+
+app.post("/deleteContractByEquipment", async (req, res) => {
+  const { uniqueUserId, equipmentId } = req.body;
+  try {
+    await db.deleteContractByEquipment(uniqueUserId, equipmentId);
+    res.status(200).send('Contract deleted successfully');
+  } catch (error) {
+    console.error('Error deleting contract by equipment:', error);
+    res.status(500).send('Error deleting contract by equipment');
   }
 });
 

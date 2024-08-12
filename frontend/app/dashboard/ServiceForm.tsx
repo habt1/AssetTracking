@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import 'react-toastify/dist/ReactToastify.css';
 import EquipmentForm from "./EquipmentForm";
 
@@ -19,7 +20,6 @@ interface Service {
   shipMethod: string;
   tracking: string;
   equipmentIdserviceId: string;
-  deactivated: boolean;
 }
 
 interface Equipment {
@@ -76,6 +76,21 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
   const [hasChanges, setHasChanges] = useState(false);
   const [changedRows, setChangedRows] = useState<Set<number>>(new Set());
   const [backToEquipment, setBackToEquipment] = useState(false);
+  const [showAddServiceForm, setShowAddServiceForm] = useState(false);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
+  const parseDate = (dateString: string) => {
+    const [month, day, year] = dateString.split("-");
+    return `${year}-${month}-${day}`;
+  };
 
   const fetchServices = async () => {
     const res = await axios.post('http://localhost:3001/getServicesByEquipment', {
@@ -86,7 +101,13 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
         'Content-Type': 'application/json',
       },
     });
-    setServices(res.data);
+    const servicesData = res.data.map((service: Service) => ({
+      ...service,
+      serviceDateIn: formatDate(service.serviceDateIn),
+      serviceDateReceived: formatDate(service.serviceDateReceived),
+      returnDate: formatDate(service.returnDate)
+    }));
+    setServices(servicesData);
   };
 
   useEffect(() => {
@@ -98,17 +119,16 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
     const serviceItem = {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId,
-      serviceDateIn,
+      serviceDateIn: parseDate(serviceDateIn),
       rma,
       orderNum,
       po,
       technician,
       issue,
-      serviceDateReceived,
-      returnDate,
+      serviceDateReceived: parseDate(serviceDateReceived),
+      returnDate: parseDate(returnDate),
       shipMethod,
       tracking,
-      deactivated: false,
       equipmentIdserviceId: `${equipment.locationIdequipmentId}|${serviceDateIn}|${rma}|${orderNum}|${po}|${technician}|${issue}|${serviceDateReceived}|${returnDate}|${shipMethod}|${tracking}`
     };
     await axios.post('http://localhost:3001/addService', serviceItem, {
@@ -127,26 +147,24 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
     setShipMethod("");
     setTracking("");
     await fetchServices();
+    setShowAddServiceForm(false);
   };
 
   const handleInputChange = (index: number, field: keyof Service, value: string) => {
     const updatedServices = [...services];
-    (updatedServices[index][field] as string | number) = value;
-    setServices(updatedServices);
-    setHasChanges(true);
-    setChangedRows(prev => new Set(prev).add(index));
-  };
-
-  const handleDeactivatedChange = async (index: number, value: boolean) => {
-    const updatedServices = [...services];
-    updatedServices[index].deactivated = value;
+    updatedServices[index][field] = field.includes("Date") ? formatDate(value) : value;
     setServices(updatedServices);
     setHasChanges(true);
     setChangedRows(prev => new Set(prev).add(index));
   };
 
   const handleSaveChanges = async () => {
-    const updatedServices = Array.from(changedRows).map(index => services[index]);
+    const updatedServices = Array.from(changedRows).map(index => ({
+      ...services[index],
+      serviceDateIn: parseDate(services[index].serviceDateIn),
+      serviceDateReceived: parseDate(services[index].serviceDateReceived),
+      returnDate: parseDate(services[index].returnDate),
+    }));
     await axios.post('http://localhost:3001/updateService', { service: updatedServices }, {
       headers: {
         'Content-Type': 'application/json',
@@ -158,9 +176,13 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
     fetchServices();
   };
 
+  const toggleAddServiceForm = () => {
+    setShowAddServiceForm(prev => !prev);
+  };
+
   if (backToEquipment) {
     return (
-        <EquipmentForm userId={userId} customer={customer} location={location} />
+      <EquipmentForm userId={userId} customer={customer} location={location} />
     );
   }
 
@@ -186,130 +208,111 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
           <h2 className="text-2xl font-bold text-black">Equipment: {equipment.make} {equipment.model}</h2>
           <p className="text-lg text-black">Serial: {equipment.serial}</p>
           <p className="text-lg text-black">Configuration: {equipment.configuration}</p>
-          <p className="text-lg text-black">Purchase Date: {equipment.purchaseDate}</p>
-          <p className="text-lg text-black">EOL Date: {equipment.eolDate}</p>
+          <p className="text-lg text-black">Purchase Date: {formatDate(equipment.purchaseDate)}</p>
+          <p className="text-lg text-black">EOL Date: {formatDate(equipment.eolDate)}</p>
         </div>
       </div>
       <h2 className="text-xl font-bold text-black text-center">Services</h2>
-      <table className="w-full text-black mb-4">
+      <table className="w-full text-black mb-4 border-collapse">
         <thead>
           <tr>
-            <th className="border px-4 py-2 text-center">Service Date In</th>
-            <th className="border px-4 py-2 text-center">RMA #</th>
-            <th className="border px-4 py-2 text-center">Order #</th>
-            <th className="border px-4 py-2 text-center">PO #</th>
-            <th className="border px-4 py-2 text-center">Technician</th>
-            <th className="border px-4 py-2 text-center">Issue</th>
-            <th className="border px-4 py-2 text-center">Service Date Received</th>
-            <th className="border px-4 py-2 text-center">Return Date</th>
-            <th className="border px-4 py-2 text-center">Ship Method</th>
-            <th className="border px-4 py-2 text-center">Tracking #</th>
-            <th className="border px-4 py-2 text-center">Deactivated</th>
+            <th className="border px-2 py-1 text-center">Service Date In</th>
+            <th className="border px-2 py-1 text-center" style={{ width: "10%" }}>RMA #</th>
+            <th className="border px-2 py-1 text-center" style={{ width: "10%" }}>Order #</th>
+            <th className="border px-2 py-1 text-center" style={{ width: "10%" }}>PO #</th>
+            <th className="border px-2 py-1 text-center" style={{ width: "15%" }}>Technician/Provider</th>
+            <th className="border px-2 py-1 text-center" style={{ width: "20%" }}>Issue</th>
+            <th className="border px-2 py-1 text-center">Service Date Received</th>
+            <th className="border px-2 py-1 text-center">Return Date</th>
+            <th className="border px-2 py-1 text-center" style={{ width: "5%" }}>Ship Method</th>
+            <th className="border px-2 py-1 text-center">Tracking #</th>
           </tr>
         </thead>
         <tbody>
           {services.length === 0 ? (
             <tr>
-              <td colSpan={11} className="border px-4 py-2 text-center">No services</td>
+              <td colSpan={10} className="border px-2 py-1 text-center">No services</td>
             </tr>
           ) : (
             services.map((item, index) => (
               <tr key={index}>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="date"
-                    value={item.serviceDateIn}
+                    value={parseDate(item.serviceDateIn)}
                     onChange={(e) => handleInputChange(index, 'serviceDateIn', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="text"
                     value={item.rma}
                     onChange={(e) => handleInputChange(index, 'rma', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="text"
                     value={item.orderNum}
                     onChange={(e) => handleInputChange(index, 'orderNum', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="text"
                     value={item.po}
                     onChange={(e) => handleInputChange(index, 'po', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="text"
                     value={item.technician}
                     onChange={(e) => handleInputChange(index, 'technician', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
+                <td className="border px-2 py-1">
+                  <textarea
                     value={item.issue}
                     onChange={(e) => handleInputChange(index, 'issue', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="date"
-                    value={item.serviceDateReceived}
+                    value={parseDate(item.serviceDateReceived)}
                     onChange={(e) => handleInputChange(index, 'serviceDateReceived', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="date"
-                    value={item.returnDate}
+                    value={parseDate(item.returnDate)}
                     onChange={(e) => handleInputChange(index, 'returnDate', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="text"
                     value={item.shipMethod}
                     onChange={(e) => handleInputChange(index, 'shipMethod', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-1">
                   <input
                     type="text"
                     value={item.tracking}
                     onChange={(e) => handleInputChange(index, 'tracking', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2 text-center">
-                  <input
-                    type="checkbox"
-                    checked={item.deactivated}
-                    onChange={(e) => handleDeactivatedChange(index, e.target.checked)}
+                    className="border-none w-full bg-transparent"
                   />
                 </td>
               </tr>
@@ -317,52 +320,65 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
           )}
         </tbody>
       </table>
+
       <div className="flex justify-center">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`button ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
         </button>
       </div>
-      <form onSubmit={handleAddService} className="grid grid-cols-1 gap-4 mt-4">
-        <div>
-          <label className="block text-sm text-black font-medium">Service Date In</label>
-          <input name="serviceDateIn" value={serviceDateIn} onChange={(e) => setServiceDateIn(e.target.value)} required className="p-2 border rounded w-full" type="date" />
-        </div>
-        <input name="rma" placeholder="RMA #" value={rma} onChange={(e) => setRma(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="order" placeholder="Order #" value={orderNum} onChange={(e) => setOrderNum(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="po" placeholder="PO #" value={po} onChange={(e) => setPo(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="technician" placeholder="Technician" value={technician} onChange={(e) => setTechnician(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="issue" placeholder="Issue" value={issue} onChange={(e) => setIssue(e.target.value)} required className="p-2 border rounded w-full" />
-        <div>
-          <label className="block text-sm text-black font-medium">Service Date Received</label>
-          <input name="serviceDateReceived" value={serviceDateReceived} onChange={(e) => setServiceDateReceived(e.target.value)} required className="p-2 border rounded w-full" type="date" />
-        </div>
-        <div>
-          <label className="block text-sm text-black font-medium">Return Date</label>
-          <input name="returnDate" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
-        </div>
-        <input name="shipMethod" placeholder="Ship Method" value={shipMethod} onChange={(e) => setShipMethod(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="tracking" placeholder="Tracking #" value={tracking} onChange={(e) => setTracking(e.target.value)} required className="p-2 border rounded w-full" />
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
-          Add Service
+
+      <div className="text-center mt-4">
+        <button onClick={toggleAddServiceForm} className="button">
+          {showAddServiceForm ? "Hide Add Service" : "Add Service"}
         </button>
-      </form>
+      </div>
+      {showAddServiceForm && (
+        <form onSubmit={handleAddService} className="grid grid-cols-1 gap-4 mt-4">
+          <div>
+            <label className="block text-sm text-black font-medium">Service Date In</label>
+            <input name="serviceDateIn" value={serviceDateIn} onChange={(e) => setServiceDateIn(e.target.value)} required className="p-2 border rounded w-full" type="date" />
+          </div>
+          <input name="rma" placeholder="RMA #" value={rma} onChange={(e) => setRma(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="order" placeholder="Order #" value={orderNum} onChange={(e) => setOrderNum(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="po" placeholder="PO #" value={po} onChange={(e) => setPo(e.target.value)} className="p-2 border rounded w-full" />
+          <input name="technician" placeholder="Technician/Provider" value={technician} onChange={(e) => setTechnician(e.target.value)} className="p-2 border rounded w-full" />
+          <textarea name="issue" placeholder="Issue" value={issue} onChange={(e) => setIssue(e.target.value)} className="p-2 border rounded w-full h-24 text-black" />
+          <div>
+            <label className="block text-sm text-black font-medium">Service Date Received</label>
+            <input name="serviceDateReceived" value={serviceDateReceived} onChange={(e) => setServiceDateReceived(e.target.value)} className="p-2 border rounded w-full" type="date" />
+          </div>
+          <div>
+            <label className="block text-sm text-black font-medium">Return Date</label>
+            <input name="returnDate" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="p-2 border rounded w-full" type="date" />
+          </div>
+          <input name="shipMethod" placeholder="Ship Method" value={shipMethod} onChange={(e) => setShipMethod(e.target.value)} className="p-2 border rounded w-full" />
+          <input name="tracking" placeholder="Tracking #" value={tracking} onChange={(e) => setTracking(e.target.value)} className="p-2 border rounded w-full" />
+          <button type="submit" className="button">
+            Submit Service
+          </button>
+        </form>
+      )}
+
       <div className="flex flex-col items-center">
         <button
-          className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4"
+          className="button"
           onClick={() => setBackToEquipment(true)}
         >
           Back to Equipment
         </button>
         <button
-          className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4"
+          className="button"
           onClick={() => window.location.href = "/dashboard"}
         >
           Back to Dashboard
         </button>
+        <LogoutLink postLogoutRedirectURL="/" className="button mt-4">
+          Log out
+        </LogoutLink>
       </div>
     </div>
   );

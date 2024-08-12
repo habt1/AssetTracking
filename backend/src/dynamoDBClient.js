@@ -58,7 +58,6 @@ const getAllSerials = async (uniqueUserId) => {
   }
 };
 
-
 const addCustomer = async (customer) => {
   const customerId = [
     customer.name, customer.address, customer.city,
@@ -79,6 +78,46 @@ const addCustomer = async (customer) => {
     await docClient.put(params).promise();
   } catch (err) {
     console.error('Unable to add customer. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const updateCustomer = async (uniqueUserId, customerId, updates) => {
+  const params = {
+    TableName: 'CustomerTable',
+    Key: {
+      uniqueUserId: uniqueUserId,
+      customerId: customerId,
+    },
+    UpdateExpression: `set 
+      #name = :name,
+      address = :address,
+      city = :city,
+      #state = :state,
+      zip = :zip,
+      contact = :contact,
+      contactEmail = :contactEmail,
+      contactPhone = :contactPhone`,
+    ExpressionAttributeNames: {
+      '#name': 'name',  // Use expression attribute name for reserved keyword
+      '#state': 'state' // Also consider 'state' as it might be reserved
+    },
+    ExpressionAttributeValues: {
+      ':name': updates.name,
+      ':address': updates.address,
+      ':city': updates.city,
+      ':state': updates.state,
+      ':zip': updates.zip,
+      ':contact': updates.contact,
+      ':contactEmail': updates.contactEmail,
+      ':contactPhone': updates.contactPhone,
+    },
+    ReturnValues: 'UPDATED_NEW'
+  };
+
+  try {
+    await docClient.update(params).promise();
+  } catch (err) {
+    console.error('Unable to update customer. Error JSON:', JSON.stringify(err, null, 2));
   }
 };
 
@@ -356,8 +395,7 @@ const updateService = async (service) => {
       serviceDateReceived = :serviceDateReceived,
       returnDate = :returnDate,
       shipMethod = :shipMethod,
-      tracking = :tracking,
-      deactivated = :deactivated`,
+      tracking = :tracking`,
     ExpressionAttributeValues: {
       ':serviceDateIn': service.serviceDateIn,
       ':equipmentId': service.equipmentId,
@@ -370,7 +408,6 @@ const updateService = async (service) => {
       ':returnDate': service.returnDate,
       ':shipMethod': service.shipMethod,
       ':tracking': service.tracking,
-      ':deactivated': service.deactivated,
     },
     ReturnValues: 'UPDATED_NEW'
   };
@@ -382,7 +419,7 @@ const updateService = async (service) => {
   }
 };
 
-const getContractsByEquipment = async (uniqueUserId, equipmentId) => {
+const getContractByEquipment = async (uniqueUserId, equipmentId) => {
   const params = {
     TableName: 'ContractTable',
     KeyConditionExpression: 'uniqueUserId = :uid AND begins_with(equipmentIdcontractId, :eid)',
@@ -394,13 +431,15 @@ const getContractsByEquipment = async (uniqueUserId, equipmentId) => {
 
   try {
     const data = await docClient.query(params).promise();
-    return data.Items;
+    return data.Items[0];  // Assuming only one contract per equipment
   } catch (err) {
-    console.error('Unable to fetch contracts. Error JSON:', JSON.stringify(err, null, 2));
+    console.error('Unable to fetch contract. Error JSON:', JSON.stringify(err, null, 2));
   }
 };
 
 const addContract = async (contract) => {
+  await deleteContractByEquipment(contract.uniqueUserId, contract.equipmentId);
+
   const params = {
     TableName: 'ContractTable',
     Item: {
@@ -429,15 +468,13 @@ const updateContract = async (contract) => {
       orderNum = :orderNum,
       technician = :technician,
       term = :term,
-      startDate = :startDate,
-      deactivated = :deactivated`,
+      startDate = :startDate`,
     ExpressionAttributeValues: {
       ':po': contract.po,
       ':orderNum': contract.orderNum,
       ':technician': contract.technician,
       ':term': contract.term,
       ':startDate': contract.startDate,
-      ':deactivated': contract.deactivated,
     },
     ReturnValues: 'UPDATED_NEW'
   };
@@ -446,6 +483,26 @@ const updateContract = async (contract) => {
     await docClient.update(params).promise();
   } catch (err) {
     console.error('Unable to update contract. Error JSON:', JSON.stringify(err, null, 2));
+  }
+};
+
+const deleteContractByEquipment = async (uniqueUserId, equipmentId) => {
+  const existingContract = await getContractByEquipment(uniqueUserId, equipmentId);
+
+  if (existingContract) {
+    const params = {
+      TableName: 'ContractTable',
+      Key: {
+        uniqueUserId: existingContract.uniqueUserId,
+        equipmentIdcontractId: existingContract.equipmentIdcontractId,
+      }
+    };
+
+    try {
+      await docClient.delete(params).promise();
+    } catch (err) {
+      console.error('Unable to delete contract. Error JSON:', JSON.stringify(err, null, 2));
+    }
   }
 };
 
@@ -466,7 +523,9 @@ module.exports = {
   getServicesByEquipment,
   addService,
   updateService,
-  getContractsByEquipment,
+  getContractByEquipment,
   addContract,
-  updateContract
+  updateContract,
+  updateCustomer,
+  deleteContractByEquipment
 };

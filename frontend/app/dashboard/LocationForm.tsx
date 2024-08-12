@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from 'axios';
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import EquipmentForm from "./EquipmentForm";
@@ -33,6 +34,11 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [changedRows, setChangedRows] = useState<Set<number>>(new Set());
+  const [showAddLocationForm, setShowAddLocationForm] = useState(false);
+
+  const usStatesAndCanadianProvinces = [
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "AB", "BC", "MB", "NB", "NL", "NS", "ON", "PE", "QC", "SK", "NT", "NU", "YT"
+  ];
 
   const fetchLocations = async () => {
     const res = await axios.post('http://localhost:3001/getLocationsByCustomer', {
@@ -82,6 +88,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
     
     // Refresh the locations list
     fetchLocations();
+    setShowAddLocationForm(false);
   };
 
   const handleSaveChanges = async () => {
@@ -113,6 +120,10 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
     setChangedRows(prev => new Set(prev).add(index));
   };
 
+  const toggleAddLocationForm = () => {
+    setShowAddLocationForm(prev => !prev);
+  };
+
   if (selectedLocation) {
     return (
         <EquipmentForm userId={userId} customer={customer} location={selectedLocation} />
@@ -133,16 +144,16 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
       <table className="w-full text-black mb-4">
         <thead>
           <tr>
-            <th className="border px-4 py-2"></th>
-            <th className="border px-4 py-2">Name</th>
-            <th className="border px-4 py-2">Address</th>
-            <th className="border px-4 py-2">City</th>
-            <th className="border px-4 py-2">State</th>
-            <th className="border px-4 py-2">Zip</th>
-            <th className="border px-4 py-2">Contact</th>
-            <th className="border px-4 py-2">Contact Email</th>
-            <th className="border px-4 py-2">Contact Phone</th>
-            <th className="border px-4 py-2">Deactivated</th>
+            <th className="border px-2 py-2" style={{ width: "5%" }}></th>
+            <th className="border px-2 py-2" style={{ width: "20%" }}>Name</th>
+            <th className="border px-2 py-2" style={{ width: "20%" }}>Address</th>
+            <th className="border px-2 py-2" style={{ width: "15%" }}>City</th>
+            <th className="border px-2 py-2" style={{ width: "5%" }}>State</th>
+            <th className="border px-2 py-2" style={{ width: "10%" }}>Zip</th>
+            <th className="border px-2 py-2" style={{ width: "10%" }}>Contact</th>
+            <th className="border px-2 py-2" style={{ width: "10%" }}>Contact Email</th>
+            <th className="border px-2 py-2" style={{ width: "10%" }}>Contact Phone</th>
+            <th className="border px-2 py-2" style={{ width: "1%" }}>Deactivated</th>
           </tr>
         </thead>
         <tbody>
@@ -153,7 +164,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
           ) : (
             locations.map((location, index) => (
               <tr key={index}>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   {!location.deactivated && (
                     <button
                       onClick={() => setSelectedLocation(location)}
@@ -163,7 +174,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     </button>
                   )}
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationName}
@@ -172,7 +183,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationAddress}
@@ -181,7 +192,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationCity}
@@ -190,16 +201,21 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
+                <td className="border px-2 py-2">
+                  <select
                     value={location.locationState}
                     onChange={(e) => handleInputChange(index, 'locationState', e.target.value)}
                     disabled={location.deactivated}
                     className="p-2 border rounded w-full"
-                  />
+                  >
+                    {usStatesAndCanadianProvinces.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationZip}
@@ -208,7 +224,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationContact}
@@ -217,7 +233,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationContactEmail}
@@ -226,7 +242,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationContactPhone}
@@ -235,7 +251,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     className="p-2 border rounded w-full"
                   />
                 </td>
-                <td className="border px-4 py-2 text-center">
+                <td className="border px-2 py-2 text-center">
                   <input
                     type="checkbox"
                     checked={location.deactivated}
@@ -250,31 +266,58 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
       <div className="flex justify-center">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`button ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
         </button>
       </div>
-      <form onSubmit={handleAddLocation} className="grid grid-cols-1 gap-4 mt-4">
-        <input name="locationName" placeholder="Location Name" value={locationName} onChange={(e) => setLocationName(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationAddress" placeholder="Location Address" value={locationAddress} onChange={(e) => setLocationAddress(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationCity" placeholder="Location City" value={locationCity} onChange={(e) => setLocationCity(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationState" placeholder="Location State" value={locationState} onChange={(e) => setLocationState(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationZip" placeholder="Location Zip Code" value={locationZip} onChange={(e) => setLocationZip(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationContact" placeholder="Location Contact" value={locationContact} onChange={(e) => setLocationContact(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationEmail" placeholder="Location Email" value={locationContactEmail} onChange={(e) => setLocationContactEmail(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="locationPhone" placeholder="Location Phone" value={locationContactPhone} onChange={(e) => setLocationContactPhone(e.target.value)} required className="p-2 border rounded w-full" />
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
-          Add Location
+
+      <div>
+        <button onClick={toggleAddLocationForm} className="button mb-4">
+          {showAddLocationForm ? "Hide Add New Location" : "Add New Location"}
         </button>
-      </form>
+        {showAddLocationForm && (
+          <form onSubmit={handleAddLocation} className="grid grid-cols-1 gap-4">
+            <input name="locationName" placeholder="Name" value={locationName} onChange={(e) => setLocationName(e.target.value)} required className="p-2 border rounded w-full" />
+            <input name="locationAddress" placeholder="Address" value={locationAddress} onChange={(e) => setLocationAddress(e.target.value)} className="p-2 border rounded w-full" />
+            <input name="locationCity" placeholder="City" value={locationCity} onChange={(e) => setLocationCity(e.target.value)} className="p-2 border rounded w-full" />
+            <div className="flex flex-col items-start">
+              <label className="block text-sm text-black font-medium">State</label>
+              <select
+                name="locationState"
+                value={locationState}
+                onChange={(e) => setLocationState(e.target.value)}
+                className="p-2 border rounded w-full text-black"
+              >
+                <option value="" disabled>Select State</option>
+                {usStatesAndCanadianProvinces.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <input name="locationZip" placeholder="Zip Code" value={locationZip} onChange={(e) => setLocationZip(e.target.value)} className="p-2 border rounded w-full" />
+            <input name="locationContact" placeholder="Contact" value={locationContact} onChange={(e) => setLocationContact(e.target.value)} className="p-2 border rounded w-full" />
+            <input name="locationEmail" placeholder="Contact Email" value={locationContactEmail} onChange={(e) => setLocationContactEmail(e.target.value)} className="p-2 border rounded w-full" />
+            <input name="locationPhone" placeholder="Contact Phone" value={locationContactPhone} onChange={(e) => setLocationContactPhone(e.target.value)} className="p-2 border rounded w-full" />
+            <button type="submit" className="button">
+              Submit Location
+            </button>
+          </form>
+        )}
+      </div>
       <button
-        className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto"
+        className="button"
         onClick={() => window.location.href = "/dashboard"}
       >
         Back
       </button>
+      <LogoutLink postLogoutRedirectURL="/" className="button mt-4">
+          Log out
+      </LogoutLink>
     </div>
   );
 }

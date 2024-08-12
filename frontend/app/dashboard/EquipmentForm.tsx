@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import ServiceForm from "./ServiceForm";
 import ContractForm from "./ContractForm";
 
@@ -49,12 +50,11 @@ interface Contract {
   equipmentId: string;
   startDate: string;
   endDate: string;
-  deactivated: boolean;
 }
 
 export default function EquipmentForm({ userId, customer, location }: { userId: string, customer: Customer, location: Location }) {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [contracts, setContracts] = useState<{ [key: string]: Contract[] }>({});
+  const [contracts, setContracts] = useState<{ [key: string]: Contract | null }>({});
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [configuration, setConfiguration] = useState("");
@@ -65,6 +65,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
   const [changedRows, setChangedRows] = useState<Set<number>>(new Set());
   const [selectedSerial, setSelectedSerial] = useState<any | null>(null);
   const [selectedContract, setSelectedContract] = useState<any | null>(null);
+  const [showAddEquipmentForm, setShowAddEquipmentForm] = useState(false);
 
   const fetchEquipment = useCallback(async () => {
     try {
@@ -85,7 +86,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
 
   const fetchContractsByEquipment = useCallback(async (equipmentId: string) => {
     try {
-      const res = await axios.post('http://localhost:3001/getContractsByEquipment', {
+      const res = await axios.post('http://localhost:3001/getContractByEquipment', {
         uniqueUserId: userId,
         equipmentId,
       }, {
@@ -93,7 +94,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
           'Content-Type': 'application/json',
         },
       });
-      setContracts(prev => ({ ...prev, [equipmentId]: res.data }));
+      setContracts(prev => ({ ...prev, [equipmentId]: res.data || null }));
     } catch (error) {
       console.error("Error fetching contracts:", error);
       toast.error("Failed to fetch contracts.");
@@ -137,6 +138,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
       setPurchaseDate("");
       setEolDate("");
       await fetchEquipment();
+      setShowAddEquipmentForm(false);
     } catch (error) {
       console.error("Error adding equipment:", error);
       toast.error("Failed to add equipment.");
@@ -187,12 +189,17 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
 
   const checkContractStatus = (equipmentId: string) => {
     const now = new Date();
-    const equipmentContracts = (contracts[equipmentId] || []).filter(contract => !contract.deactivated);
-    return equipmentContracts.some(contract => {
+    const contract = contracts[equipmentId];
+    if (contract) {
       const startDate = new Date(contract.startDate);
       const endDate = new Date(contract.endDate);
       return startDate <= now && now <= endDate;
-    });
+    }
+    return false;
+  };
+
+  const toggleAddEquipmentForm = () => {
+    setShowAddEquipmentForm(prev => !prev);
   };
 
   if (selectedSerial) {
@@ -234,10 +241,10 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
           <tr>
             <th className="border px-4 py-2"></th>
             <th className="border px-4 py-2"></th>
-            <th className="border px-4 py-2">Make</th>
-            <th className="border px-4 py-2">Model</th>
-            <th className="border px-4 py-2">Configuration #</th>
-            <th className="border px-4 py-2">Serial #</th>
+            <th className="border px-4 py-2" style={{ width: "10%" }}>Make</th>
+            <th className="border px-4 py-2" style={{ width: "10%" }}>Model</th>
+            <th className="border px-4 py-2" style={{ width: "15%" }}>Configuration #</th>
+            <th className="border px-4 py-2" style={{ width: "20%" }}>Serial #</th>
             <th className="border px-4 py-2">Purchase Date</th>
             <th className="border px-4 py-2">EOL Date</th>
             <th className="border px-4 py-2">Deactivated</th>
@@ -348,35 +355,46 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
       <div className="flex justify-center">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`button ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
         </button>
       </div>
-      <form onSubmit={handleAddEquipment} className="grid grid-cols-1 gap-4 mt-4">
-        <input name="make" placeholder="Make" value={make} onChange={(e) => setMake(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="model" placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="configuration" placeholder="Configuration #" value={configuration} onChange={(e) => setConfiguration(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="serial" placeholder="Serial #" value={serial} onChange={(e) => setSerial(e.target.value)} required className="p-2 border rounded w-full" />
-        <div>
-          <label className="block text-sm text-black font-medium">Purchase Date</label>
-          <input name="purchaseDate" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
-        </div>
-        <div>
-          <label className="block text-sm text-black font-medium">EOL Date</label>
-          <input name="eolDate" value={eolDate} onChange={(e) => setEolDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
-        </div>
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
-          Add Equipment
+
+      <div className="text-center mt-4">
+        <button onClick={toggleAddEquipmentForm} className="button">
+          {showAddEquipmentForm ? "Hide Add Equipment" : "Add Equipment"}
         </button>
-      </form>
+      </div>
+      {showAddEquipmentForm && (
+        <form onSubmit={handleAddEquipment} className="grid grid-cols-1 gap-4 mt-4">
+          <input name="make" placeholder="Make" value={make} onChange={(e) => setMake(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="model" placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="configuration" placeholder="Configuration #" value={configuration} onChange={(e) => setConfiguration(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="serial" placeholder="Serial #" value={serial} onChange={(e) => setSerial(e.target.value)} required className="p-2 border rounded w-full" />
+          <div>
+            <label className="block text-sm text-black font-medium">Purchase Date</label>
+            <input name="purchaseDate" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
+          </div>
+          <div>
+            <label className="block text-sm text-black font-medium">EOL Date</label>
+            <input name="eolDate" value={eolDate} onChange={(e) => setEolDate(e.target.value)} className="p-2 border rounded w-full" type="date" />
+          </div>
+          <button type="submit" className="button">
+            Submit Equipment
+          </button>
+        </form>
+      )}
       <button
-        className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto"
+        className="button"
         onClick={() => window.location.href = "/dashboard"}
       >
         Back
       </button>
+      <LogoutLink postLogoutRedirectURL="/" className="button mt-4">
+        Log out
+      </LogoutLink>
     </div>
   );
 }

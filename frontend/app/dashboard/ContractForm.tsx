@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import 'react-toastify/dist/ReactToastify.css';
 import EquipmentForm from "./EquipmentForm";
 
@@ -17,7 +18,6 @@ interface Contract {
   reminder30Day: string;
   reminder10Day: string;
   equipmentIdcontractId: string;
-  deactivated: boolean;
 }
 
 interface Equipment {
@@ -60,18 +60,22 @@ interface Location {
 }
 
 export default function ContractForm({ userId, equipment, location, customer }: { userId: string, equipment: Equipment, location: Location, customer: Customer }) {
-  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [contract, setContract] = useState<Contract | null>(null);
   const [po, setPo] = useState("");
   const [orderNum, setOrderNum] = useState("");
   const [technician, setTechnician] = useState("");
   const [term, setTerm] = useState(1);
   const [startDate, setStartDate] = useState("");
-  const [hasChanges, setHasChanges] = useState(false);
-  const [changedRows, setChangedRows] = useState<Set<number>>(new Set());
+  const [showAddContractForm, setShowAddContractForm] = useState(false);
   const [backToEquipment, setBackToEquipment] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const fetchContracts = async () => {
-    const res = await axios.post('http://localhost:3001/getContractsByEquipment', {
+  useEffect(() => {
+    fetchContract();
+  }, [userId, equipment]);
+
+  const fetchContract = async () => {
+    const res = await axios.post('http://localhost:3001/getContractByEquipment', {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId
     }, {
@@ -79,24 +83,69 @@ export default function ContractForm({ userId, equipment, location, customer }: 
         'Content-Type': 'application/json',
       },
     });
-    const contractsWithEndDate = res.data.map((contract: Contract) => ({
-      ...contract,
-      endDate: calculateEndDate(contract.startDate, contract.term),
-      reminder30Day: calculateReminderDate(contract.startDate, contract.term, 30),
-      reminder10Day: calculateReminderDate(contract.startDate, contract.term, 10)
-    }));
-    setContracts(contractsWithEndDate);
+    if (res.data) {
+      const existingContract = res.data;
+      existingContract.endDate = formatDate(calculateEndDate(existingContract.startDate, existingContract.term));
+      existingContract.reminder30Day = formatDate(calculateReminderDate(existingContract.endDate, 30));
+      existingContract.reminder10Day = formatDate(calculateReminderDate(existingContract.endDate, 10));
+      existingContract.startDate = formatDate(existingContract.startDate);
+      setContract(existingContract);
+      setPo(existingContract.po);
+      setOrderNum(existingContract.orderNum);
+      setTechnician(existingContract.technician);
+      setTerm(existingContract.term);
+      setStartDate(existingContract.startDate);
+    }
   };
 
-  useEffect(() => {
-    fetchContracts();
-  }, [userId, equipment]);
+  const calculateEndDate = (startDate: string, term: number) => {
+    const start = new Date(startDate);
+    start.setFullYear(start.getFullYear() + term);
+    return start.toISOString().split('T')[0];
+  };
+
+  const calculateReminderDate = (endDate: string, daysBefore: number) => {
+    let date = new Date(endDate);
+    let daysCount = 0;
+    while (daysCount < daysBefore) {
+      date.setDate(date.getDate() - 1);
+      if (date.getDay() !== 0 && date.getDay() !== 6) {  // Skip weekends
+        daysCount++;
+      }
+    }
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
+  };
+
+  const handleInputChange = (field: keyof Contract, value: string | number) => {
+    if (contract) {
+      setContract({ ...contract, [field]: value });
+      setHasChanges(true);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (contract) {
+      await axios.post('http://localhost:3001/updateContract', { contracts: [contract] }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      toast.success("Contract saved!");
+      setHasChanges(false);
+    }
+  };
 
   const handleAddContract = async (e: any) => {
     e.preventDefault();
-    const endDate = calculateEndDate(startDate, term);
-    const reminder30Day = calculateReminderDate(startDate, term, 30);
-    const reminder10Day = calculateReminderDate(startDate, term, 10);
+    const endDate = formatDate(calculateEndDate(startDate, term));
+    const reminder30Day = formatDate(calculateReminderDate(endDate, 30));
+    const reminder10Day = formatDate(calculateReminderDate(endDate, 10));
+
     const contractItem = {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId,
@@ -104,76 +153,46 @@ export default function ContractForm({ userId, equipment, location, customer }: 
       orderNum,
       technician,
       term,
-      startDate,
+      startDate: formatDate(startDate),
       endDate,
       reminder30Day,
       reminder10Day,
-      deactivated: false,
       equipmentIdcontractId: `${equipment.locationIdequipmentId}|${po}|${orderNum}|${technician}|${term}|${startDate}`
     };
+
+    // Delete existing contract if any
+    await axios.post('http://localhost:3001/deleteContractByEquipment', {
+      uniqueUserId: userId,
+      equipmentId: equipment.locationIdequipmentId
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Add the new contract
     await axios.post('http://localhost:3001/addContract', contractItem, {
       headers: {
         'Content-Type': 'application/json',
       },
     });
+
     setPo("");
     setOrderNum("");
     setTechnician("");
     setTerm(1);
     setStartDate("");
-    await fetchContracts();
+    await fetchContract();
+    setShowAddContractForm(false);
   };
 
-  const calculateEndDate = (startDate: string, term: number) => {
-    const start = new Date(startDate);
-    start.setFullYear(start.getFullYear() + term);
-    return `${start.getMonth() + 1}/${start.getDate()}/${start.getFullYear()}`;
-  };
-
-  const calculateReminderDate = (startDate: string, term: number, daysBefore: number) => {
-    const endDate = new Date(startDate);
-    endDate.setFullYear(endDate.getFullYear() + term);
-    endDate.setDate(endDate.getDate() - daysBefore);
-    return `${endDate.getMonth() + 1}/${endDate.getDate()}/${endDate.getFullYear()}`;
-  };
-
-  const handleInputChange = (index: number, field: keyof Contract, value: string | number) => {
-    const updatedContracts = [...contracts];
-    (updatedContracts[index][field] as string | number) = value;
-    if (field === 'startDate' || field === 'term') {
-      updatedContracts[index].endDate = calculateEndDate(updatedContracts[index].startDate, updatedContracts[index].term);
-      updatedContracts[index].reminder30Day = calculateReminderDate(updatedContracts[index].startDate, updatedContracts[index].term, 30);
-      updatedContracts[index].reminder10Day = calculateReminderDate(updatedContracts[index].startDate, updatedContracts[index].term, 10);
-    }
-    setContracts(updatedContracts);
-    setHasChanges(true);
-    setChangedRows(prev => new Set(prev).add(index));
-  };
-
-  const handleDeactivatedChange = async (index: number, value: boolean) => {
-    const updatedContracts = [...contracts];
-    updatedContracts[index].deactivated = value;
-    setContracts(updatedContracts);
-    setHasChanges(true);
-    setChangedRows(prev => new Set(prev).add(index));
-  };
-
-  const handleSaveChanges = async () => {
-    const updatedContracts = Array.from(changedRows).map(index => contracts[index]);
-    await axios.post('http://localhost:3001/updateContract', { contracts: updatedContracts }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    setHasChanges(false);
-    setChangedRows(new Set());
-    toast.success("Saved!");
-    fetchContracts();
+  const toggleAddContractForm = () => {
+    setShowAddContractForm(prev => !prev);
   };
 
   if (backToEquipment) {
     return (
-        <EquipmentForm userId={userId} customer={customer} location={location} />
+      <EquipmentForm userId={userId} customer={customer} location={location} />
     );
   }
 
@@ -199,152 +218,148 @@ export default function ContractForm({ userId, equipment, location, customer }: 
           <h2 className="text-2xl font-bold text-black">Equipment: {equipment.make} {equipment.model}</h2>
           <p className="text-lg text-black">Serial: {equipment.serial}</p>
           <p className="text-lg text-black">Configuration: {equipment.configuration}</p>
-          <p className="text-lg text-black">Purchase Date: {equipment.purchaseDate}</p>
-          <p className="text-lg text-black">EOL Date: {equipment.eolDate}</p>
+          <p className="text-lg text-black">Purchase Date: {formatDate(equipment.purchaseDate)}</p>
+          <p className="text-lg text-black">EOL Date: {formatDate(equipment.eolDate)}</p>
         </div>
       </div>
-      <h2 className="text-xl font-bold text-black text-center">Contracts</h2>
+      <h2 className="text-xl font-bold text-black text-center">Contract</h2>
       <table className="w-full text-black mb-4">
         <thead>
           <tr>
-            <th className="border px-4 py-2 text-center">PO #</th>
-            <th className="border px-4 py-2 text-center">Order #</th>
-            <th className="border px-4 py-2 text-center">Technician</th>
-            <th className="border px-4 py-2 text-center">Term (yr)</th>
+            <th className="border px-4 py-2 text-center" style={{ width: "15%" }}>PO #</th>
+            <th className="border px-4 py-2 text-center" style={{ width: "15%" }}>Order #</th>
+            <th className="border px-4 py-2 text-center" style={{ width: "25%" }}>Technician/Provider</th>
+            <th className="border px-4 py-2 text-center" style={{ width: "5%" }}>Term (yr)</th>
             <th className="border px-4 py-2 text-center">Start Date</th>
+            <th className="border px-4 py-2 text-center">End Date</th>
             <th className="border px-4 py-2 text-center">30 Day Reminder</th>
             <th className="border px-4 py-2 text-center">10 Day Reminder</th>
-            <th className="border px-4 py-2 text-center">End Date</th>
-            <th className="border px-4 py-2 text-center">Deactivated</th>
           </tr>
         </thead>
         <tbody>
-          {contracts.length === 0 ? (
+          {contract ? (
             <tr>
-              <td colSpan={9} className="border px-4 py-2 text-center">No contracts</td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.po}
+                  onChange={(e) => handleInputChange('po', e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.orderNum}
+                  onChange={(e) => handleInputChange('orderNum', e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.technician}
+                  onChange={(e) => handleInputChange('technician', e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="number"
+                  value={contract.term}
+                  onChange={(e) => handleInputChange('term', parseInt(e.target.value))}
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.endDate}
+                  disabled
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.reminder30Day}
+                  disabled
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="text"
+                  value={contract.reminder10Day}
+                  disabled
+                  className="p-2 border rounded w-full"
+                />
+              </td>
             </tr>
           ) : (
-            contracts.map((item, index) => (
-              <tr key={index}>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
-                    value={item.po}
-                    onChange={(e) => handleInputChange(index, 'po', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
-                    value={item.orderNum}
-                    onChange={(e) => handleInputChange(index, 'orderNum', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
-                    value={item.technician}
-                    onChange={(e) => handleInputChange(index, 'technician', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="number"
-                    value={item.term}
-                    onChange={(e) => handleInputChange(index, 'term', Number(e.target.value))}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="date"
-                    value={item.startDate}
-                    onChange={(e) => handleInputChange(index, 'startDate', e.target.value)}
-                    disabled={item.deactivated}
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
-                    value={item.endDate}
-                    disabled
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
-                    value={item.reminder30Day}
-                    disabled
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <input
-                    type="text"
-                    value={item.reminder10Day}
-                    disabled
-                    className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-4 py-2 text-center">
-                  <input
-                    type="checkbox"
-                    checked={item.deactivated}
-                    onChange={(e) => handleDeactivatedChange(index, e.target.checked)}
-                  />
-                </td>
-              </tr>
-            ))
+            <tr>
+              <td colSpan={8} className="border px-4 py-2 text-center">No contract</td>
+            </tr>
           )}
         </tbody>
       </table>
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-4">
         <button
           onClick={handleSaveChanges}
-          className={`h-20 w-64 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 ${hasChanges ? 'flash' : ''}`}
+          className={`button ${hasChanges ? 'flash' : ''}`}
           disabled={!hasChanges}
         >
           Save
         </button>
       </div>
-      <form onSubmit={handleAddContract} className="grid grid-cols-1 gap-4 mt-4">
-        <input name="po" placeholder="PO #" value={po} onChange={(e) => setPo(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="orderNum" placeholder="Order #" value={orderNum} onChange={(e) => setOrderNum(e.target.value)} required className="p-2 border rounded w-full" />
-        <input name="technician" placeholder="Technician" value={technician} onChange={(e) => setTechnician(e.target.value)} required className="p-2 border rounded w-full" />
-        <div>
-          <label className="block text-sm text-black font-medium">Term (yr)</label>
-          <input name="term" placeholder="Term (yr)" value={term} onChange={(e) => setTerm(Number(e.target.value))} required className="p-2 border rounded w-full" type="number" />
-        </div>
-        <div>
-          <label className="block text-sm text-black font-medium">Start Date</label>
-          <input name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
-        </div>
-        <button type="submit" className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4 mx-auto">
-          Add Contract
+      <div className="text-center mt-4">
+        <button onClick={toggleAddContractForm} className="button">
+          {showAddContractForm ? "Hide Add Contract" : "Add Contract"}
         </button>
-      </form>
+      </div>
+      {showAddContractForm && (
+        <form onSubmit={handleAddContract} className="grid grid-cols-1 gap-4 mt-4">
+          <input name="po" placeholder="PO #" value={po} onChange={(e) => setPo(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="orderNum" placeholder="Order #" value={orderNum} onChange={(e) => setOrderNum(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="technician" placeholder="Technician/Provider" value={technician} onChange={(e) => setTechnician(e.target.value)} required className="p-2 border rounded w-full" />
+          <div>
+            <label className="block text-sm text-black font-medium">Term (yr)</label>
+            <input name="term" placeholder="Term (yr)" value={term} onChange={(e) => setTerm(Number(e.target.value))} required className="p-2 border rounded w-full" type="number" />
+          </div>
+          <div>
+            <label className="block text-sm text-black font-medium">Start Date</label>
+            <input name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="p-2 border rounded w-full" type="date" />
+          </div>
+          <button type="submit" className="button">
+            Submit Contract
+          </button>
+        </form>
+      )}
+
       <div className="flex flex-col items-center">
         <button
-          className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4"
+          className="button"
           onClick={() => setBackToEquipment(true)}
         >
           Back to Equipment
         </button>
         <button
-          className="h-10 w-48 rounded-lg bg-red-600 font-semibold hover:bg-red-700 mt-4"
+          className="button"
           onClick={() => window.location.href = "/dashboard"}
         >
           Back to Dashboard
         </button>
+        <LogoutLink postLogoutRedirectURL="/" className="button mt-4">
+          Log out
+        </LogoutLink>
       </div>
     </div>
   );

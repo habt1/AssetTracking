@@ -24,15 +24,24 @@ input {
   color: black; /* Ensure input text is black */
 }
 
-button {
+.button {
+  height: 2.5rem; /* equivalent to h-10 */
+  width: 12rem; /* equivalent to w-48 */
+  border-radius: 0.5rem; /* equivalent to rounded-lg */
+  background-color: #000000; /* Background color updated to black */
+  font-weight: 600; /* equivalent to font-semibold */
+  margin-top: 1rem; /* equivalent to mt-4 */
+  margin-left: auto;
+  margin-right: auto;
+  display: block; /* Centers horizontally */
+  text-align: center;
+  color: white; /* Text color is white */
+  line-height: 2.5rem; /* Centers text vertically */
   cursor: pointer;
-  background-color: white;
-  color: black; /* Ensure button text is black */
 }
 
-button:hover {
-  background-color: #f0f0f0;
-  color: black; /* Ensure button text remains black on hover */
+.button:hover {
+  background-color: #b91c1c; /* equivalent to hover:bg-red-700 */
 }
 
 .flex {
@@ -45,6 +54,10 @@ button:hover {
 
 .items-center {
   align-items: center;
+}
+
+.items-start {
+  align-items: flex-start; /* Align items to the start (left) */
 }
 
 .justify-header {
@@ -119,14 +132,6 @@ button:hover {
   border-color: #000000;
 }
 
-.text-gray-600 {
-  color: #718096;
-}
-
-.overflow-x-auto {
-  overflow-x: auto;
-}
-
 .grid {
   display: grid;
 }
@@ -163,44 +168,12 @@ button:hover {
   margin-top: 1rem;
 }
 
-.grid {
-  display: grid;
-}
-
 .grid-cols-1 {
   grid-template-columns: repeat(1, 1fr);
 }
 
-.gap-4 {
-  gap: 1rem;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.col-span-2 {
-  grid-column: span 2 / span 2;
-}
-
-.border-t {
-  border-top: 1px solid #d1d5db;
-}
-
-.pt-4 {
-  padding-top: 1rem;
-}
-
-.shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
 .h-10 {
   height: 2.5rem;
-}
-
-.w-32 {
-  width: 8rem;
 }
 
 .font-semibold {
