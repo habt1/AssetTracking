@@ -78,20 +78,6 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
   const [backToEquipment, setBackToEquipment] = useState(false);
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
-  };
-
-  const parseDate = (dateString: string) => {
-    const [month, day, year] = dateString.split("-");
-    return `${year}-${month}-${day}`;
-  };
-
   const fetchServices = async () => {
     const res = await axios.post('http://localhost:3001/getServicesByEquipment', {
       uniqueUserId: userId,
@@ -101,13 +87,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
         'Content-Type': 'application/json',
       },
     });
-    const servicesData = res.data.map((service: Service) => ({
-      ...service,
-      serviceDateIn: formatDate(service.serviceDateIn),
-      serviceDateReceived: formatDate(service.serviceDateReceived),
-      returnDate: formatDate(service.returnDate)
-    }));
-    setServices(servicesData);
+    setServices(res.data);
   };
 
   useEffect(() => {
@@ -119,14 +99,14 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
     const serviceItem = {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId,
-      serviceDateIn: parseDate(serviceDateIn),
+      serviceDateIn,
       rma,
       orderNum,
       po,
       technician,
       issue,
-      serviceDateReceived: parseDate(serviceDateReceived),
-      returnDate: parseDate(returnDate),
+      serviceDateReceived,
+      returnDate,
       shipMethod,
       tracking,
       equipmentIdserviceId: `${equipment.locationIdequipmentId}|${serviceDateIn}|${rma}|${orderNum}|${po}|${technician}|${issue}|${serviceDateReceived}|${returnDate}|${shipMethod}|${tracking}`
@@ -152,19 +132,14 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
 
   const handleInputChange = (index: number, field: keyof Service, value: string) => {
     const updatedServices = [...services];
-    updatedServices[index][field] = field.includes("Date") ? formatDate(value) : value;
+    updatedServices[index][field] = value;
     setServices(updatedServices);
     setHasChanges(true);
     setChangedRows(prev => new Set(prev).add(index));
   };
 
   const handleSaveChanges = async () => {
-    const updatedServices = Array.from(changedRows).map(index => ({
-      ...services[index],
-      serviceDateIn: parseDate(services[index].serviceDateIn),
-      serviceDateReceived: parseDate(services[index].serviceDateReceived),
-      returnDate: parseDate(services[index].returnDate),
-    }));
+    const updatedServices = Array.from(changedRows).map(index => services[index]);
     await axios.post('http://localhost:3001/updateService', { service: updatedServices }, {
       headers: {
         'Content-Type': 'application/json',
@@ -208,8 +183,8 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
           <h2 className="text-2xl font-bold text-black">Equipment: {equipment.make} {equipment.model}</h2>
           <p className="text-lg text-black">Serial: {equipment.serial}</p>
           <p className="text-lg text-black">Configuration: {equipment.configuration}</p>
-          <p className="text-lg text-black">Purchase Date: {formatDate(equipment.purchaseDate)}</p>
-          <p className="text-lg text-black">EOL Date: {formatDate(equipment.eolDate)}</p>
+          <p className="text-lg text-black">Purchase Date: {equipment.purchaseDate}</p>
+          <p className="text-lg text-black">EOL Date: {equipment.eolDate}</p>
         </div>
       </div>
       <h2 className="text-xl font-bold text-black text-center">Services</h2>
@@ -239,7 +214,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
                 <td className="border px-2 py-1">
                   <input
                     type="date"
-                    value={parseDate(item.serviceDateIn)}
+                    value={item.serviceDateIn}
                     onChange={(e) => handleInputChange(index, 'serviceDateIn', e.target.value)}
                     className="border-none w-full bg-transparent"
                   />
@@ -286,7 +261,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
                 <td className="border px-2 py-1">
                   <input
                     type="date"
-                    value={parseDate(item.serviceDateReceived)}
+                    value={item.serviceDateReceived}
                     onChange={(e) => handleInputChange(index, 'serviceDateReceived', e.target.value)}
                     className="border-none w-full bg-transparent"
                   />
@@ -294,7 +269,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
                 <td className="border px-2 py-1">
                   <input
                     type="date"
-                    value={parseDate(item.returnDate)}
+                    value={item.returnDate}
                     onChange={(e) => handleInputChange(index, 'returnDate', e.target.value)}
                     className="border-none w-full bg-transparent"
                   />
@@ -342,7 +317,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
             <label className="block text-sm text-black font-medium">Service Date In</label>
             <input name="serviceDateIn" value={serviceDateIn} onChange={(e) => setServiceDateIn(e.target.value)} required className="p-2 border rounded w-full" type="date" />
           </div>
-          <input name="rma" placeholder="RMA #" value={rma} onChange={(e) => setRma(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="rma" placeholder="RMA #" value={""} onChange={(e) => setRma(e.target.value)} required className="p-2 border rounded w-full" />
           <input name="order" placeholder="Order #" value={orderNum} onChange={(e) => setOrderNum(e.target.value)} required className="p-2 border rounded w-full" />
           <input name="po" placeholder="PO #" value={po} onChange={(e) => setPo(e.target.value)} className="p-2 border rounded w-full" />
           <input name="technician" placeholder="Technician/Provider" value={technician} onChange={(e) => setTechnician(e.target.value)} className="p-2 border rounded w-full" />

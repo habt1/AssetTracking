@@ -66,6 +66,9 @@ export default function ContractForm({ userId, equipment, location, customer }: 
   const [technician, setTechnician] = useState("");
   const [term, setTerm] = useState(1);
   const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [reminder30Day, setReminder30Day] = useState("");
+  const [reminder10Day, setReminder10Day] = useState("");
   const [showAddContractForm, setShowAddContractForm] = useState(false);
   const [backToEquipment, setBackToEquipment] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -85,16 +88,19 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     });
     if (res.data) {
       const existingContract = res.data;
-      existingContract.endDate = formatDate(calculateEndDate(existingContract.startDate, existingContract.term));
-      existingContract.reminder30Day = formatDate(calculateReminderDate(existingContract.endDate, 30));
-      existingContract.reminder10Day = formatDate(calculateReminderDate(existingContract.endDate, 10));
-      existingContract.startDate = formatDate(existingContract.startDate);
+      const calculatedEndDate = calculateEndDate(existingContract.startDate, existingContract.term);
+      const calculatedReminder30Day = calculateReminderDate(calculatedEndDate, 30);
+      const calculatedReminder10Day = calculateReminderDate(calculatedEndDate, 10);
+
       setContract(existingContract);
       setPo(existingContract.po);
       setOrderNum(existingContract.orderNum);
       setTechnician(existingContract.technician);
       setTerm(existingContract.term);
       setStartDate(existingContract.startDate);
+      setEndDate(calculatedEndDate);
+      setReminder30Day(calculatedReminder30Day);
+      setReminder10Day(calculatedReminder10Day);
     }
   };
 
@@ -116,14 +122,33 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     return date.toISOString().split('T')[0];
   };
 
-  const formatDate = (date: string) => {
-    const d = new Date(date);
-    return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
-  };
-
   const handleInputChange = (field: keyof Contract, value: string | number) => {
     if (contract) {
-      setContract({ ...contract, [field]: value });
+      let updatedContract = { ...contract, [field]: value };
+
+      if (field === 'startDate' || field === 'term') {
+        const updatedEndDate = calculateEndDate(
+          field === 'startDate' ? value as string : startDate,
+          field === 'term' ? value as number : term
+        );
+
+        const updatedReminder30Day = calculateReminderDate(updatedEndDate, 30);
+        const updatedReminder10Day = calculateReminderDate(updatedEndDate, 10);
+
+        updatedContract = {
+          ...updatedContract,
+          endDate: updatedEndDate,
+          reminder30Day: updatedReminder30Day,
+          reminder10Day: updatedReminder10Day
+        };
+
+        // Update state with calculated values
+        setEndDate(updatedEndDate);
+        setReminder30Day(updatedReminder30Day);
+        setReminder10Day(updatedReminder10Day);
+      }
+
+      setContract(updatedContract);
       setHasChanges(true);
     }
   };
@@ -142,9 +167,9 @@ export default function ContractForm({ userId, equipment, location, customer }: 
 
   const handleAddContract = async (e: any) => {
     e.preventDefault();
-    const endDate = formatDate(calculateEndDate(startDate, term));
-    const reminder30Day = formatDate(calculateReminderDate(endDate, 30));
-    const reminder10Day = formatDate(calculateReminderDate(endDate, 10));
+    const endDate = calculateEndDate(startDate, term);
+    const reminder30Day = calculateReminderDate(endDate, 30);
+    const reminder10Day = calculateReminderDate(endDate, 10);
 
     const contractItem = {
       uniqueUserId: userId,
@@ -153,7 +178,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
       orderNum,
       technician,
       term,
-      startDate: formatDate(startDate),
+      startDate,
       endDate,
       reminder30Day,
       reminder10Day,
@@ -182,11 +207,23 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     setTechnician("");
     setTerm(1);
     setStartDate("");
+    setEndDate("");
+    setReminder30Day("");
+    setReminder10Day("");
     await fetchContract();
     setShowAddContractForm(false);
   };
 
   const toggleAddContractForm = () => {
+    // Clear the state to remove any previous values when showing the form
+    setPo("");
+    setOrderNum("");
+    setTechnician("");
+    setTerm(1);
+    setStartDate("");
+    setEndDate("");
+    setReminder30Day("");
+    setReminder10Day("");
     setShowAddContractForm(prev => !prev);
   };
 
@@ -218,8 +255,8 @@ export default function ContractForm({ userId, equipment, location, customer }: 
           <h2 className="text-2xl font-bold text-black">Equipment: {equipment.make} {equipment.model}</h2>
           <p className="text-lg text-black">Serial: {equipment.serial}</p>
           <p className="text-lg text-black">Configuration: {equipment.configuration}</p>
-          <p className="text-lg text-black">Purchase Date: {formatDate(equipment.purchaseDate)}</p>
-          <p className="text-lg text-black">EOL Date: {formatDate(equipment.eolDate)}</p>
+          <p className="text-lg text-black">Purchase Date: {equipment.purchaseDate}</p>
+          <p className="text-lg text-black">EOL Date: {equipment.eolDate}</p>
         </div>
       </div>
       <h2 className="text-xl font-bold text-black text-center">Contract</h2>
@@ -273,7 +310,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
               </td>
               <td className="border px-4 py-2">
                 <input
-                  type="text"
+                  type="date"
                   value={contract.startDate}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
                   className="p-2 border rounded w-full"
@@ -281,24 +318,24 @@ export default function ContractForm({ userId, equipment, location, customer }: 
               </td>
               <td className="border px-4 py-2">
                 <input
-                  type="text"
-                  value={contract.endDate}
+                  type="date"
+                  value={endDate}
                   disabled
                   className="p-2 border rounded w-full"
                 />
               </td>
               <td className="border px-4 py-2">
                 <input
-                  type="text"
-                  value={contract.reminder30Day}
+                  type="date"
+                  value={reminder30Day}
                   disabled
                   className="p-2 border rounded w-full"
                 />
               </td>
               <td className="border px-4 py-2">
                 <input
-                  type="text"
-                  value={contract.reminder10Day}
+                  type="date"
+                  value={reminder10Day}
                   disabled
                   className="p-2 border rounded w-full"
                 />
