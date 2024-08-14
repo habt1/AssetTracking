@@ -14,9 +14,6 @@ interface Contract {
   technician: string;
   term: number;
   startDate: string;
-  endDate: string;
-  reminder30Day: string;
-  reminder10Day: string;
   equipmentIdcontractId: string;
 }
 
@@ -137,9 +134,6 @@ export default function ContractForm({ userId, equipment, location, customer }: 
 
         updatedContract = {
           ...updatedContract,
-          endDate: updatedEndDate,
-          reminder30Day: updatedReminder30Day,
-          reminder10Day: updatedReminder10Day
         };
 
         // Update state with calculated values
@@ -167,9 +161,6 @@ export default function ContractForm({ userId, equipment, location, customer }: 
 
   const handleAddContract = async (e: any) => {
     e.preventDefault();
-    const endDate = calculateEndDate(startDate, term);
-    const reminder30Day = calculateReminderDate(endDate, 30);
-    const reminder10Day = calculateReminderDate(endDate, 10);
 
     const contractItem = {
       uniqueUserId: userId,
@@ -179,9 +170,6 @@ export default function ContractForm({ userId, equipment, location, customer }: 
       technician,
       term,
       startDate,
-      endDate,
-      reminder30Day,
-      reminder10Day,
       equipmentIdcontractId: `${equipment.locationIdequipmentId}|${po}|${orderNum}|${technician}|${term}|${startDate}`
     };
 
@@ -207,9 +195,6 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     setTechnician("");
     setTerm(1);
     setStartDate("");
-    setEndDate("");
-    setReminder30Day("");
-    setReminder10Day("");
     await fetchContract();
     setShowAddContractForm(false);
   };
@@ -221,9 +206,6 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     setTechnician("");
     setTerm(1);
     setStartDate("");
-    setEndDate("");
-    setReminder30Day("");
-    setReminder10Day("");
     setShowAddContractForm(prev => !prev);
   };
 
@@ -268,9 +250,9 @@ export default function ContractForm({ userId, equipment, location, customer }: 
             <th className="border px-4 py-2 text-center" style={{ width: "25%" }}>Technician/Provider</th>
             <th className="border px-4 py-2 text-center" style={{ width: "5%" }}>Term (yr)</th>
             <th className="border px-4 py-2 text-center">Start Date</th>
-            <th className="border px-4 py-2 text-center">End Date</th>
             <th className="border px-4 py-2 text-center">30 Day Reminder</th>
             <th className="border px-4 py-2 text-center">10 Day Reminder</th>
+            <th className="border px-4 py-2 text-center">End Date</th>
           </tr>
         </thead>
         <tbody>
@@ -319,14 +301,6 @@ export default function ContractForm({ userId, equipment, location, customer }: 
               <td className="border px-4 py-2">
                 <input
                   type="date"
-                  value={endDate}
-                  disabled
-                  className="p-2 border rounded w-full"
-                />
-              </td>
-              <td className="border px-4 py-2">
-                <input
-                  type="date"
                   value={reminder30Day}
                   disabled
                   className="p-2 border rounded w-full"
@@ -336,6 +310,14 @@ export default function ContractForm({ userId, equipment, location, customer }: 
                 <input
                   type="date"
                   value={reminder10Day}
+                  disabled
+                  className="p-2 border rounded w-full"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="date"
+                  value={endDate}
                   disabled
                   className="p-2 border rounded w-full"
                 />

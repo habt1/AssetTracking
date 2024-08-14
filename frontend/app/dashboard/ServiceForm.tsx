@@ -64,7 +64,7 @@ interface Location {
 export default function ServiceForm({ userId, equipment, location, customer }: { userId: string, equipment: Equipment, location: Location, customer: Customer }) {
   const [services, setServices] = useState<Service[]>([]);
   const [serviceDateIn, setServiceDateIn] = useState("");
-  const [rma, setRma] = useState("");
+  const [rma, setRma] = useState(""); // Ensure the state is properly initialized
   const [orderNum, setOrderNum] = useState("");
   const [po, setPo] = useState("");
   const [technician, setTechnician] = useState("");
@@ -117,7 +117,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
       },
     });
     setServiceDateIn("");
-    setRma("");
+    setRma(""); // Ensure state is cleared after adding a service
     setOrderNum("");
     setPo("");
     setTechnician("");
@@ -222,7 +222,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
                 <td className="border px-2 py-1">
                   <input
                     type="text"
-                    value={item.rma}
+                    value={item.rma} // Ensure this field is correctly bound to the state
                     onChange={(e) => handleInputChange(index, 'rma', e.target.value)}
                     className="border-none w-full bg-transparent"
                   />
@@ -317,7 +317,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
             <label className="block text-sm text-black font-medium">Service Date In</label>
             <input name="serviceDateIn" value={serviceDateIn} onChange={(e) => setServiceDateIn(e.target.value)} required className="p-2 border rounded w-full" type="date" />
           </div>
-          <input name="rma" placeholder="RMA #" value={""} onChange={(e) => setRma(e.target.value)} required className="p-2 border rounded w-full" />
+          <input name="rma" placeholder="RMA #" value={rma} onChange={(e) => setRma(e.target.value)} required className="p-2 border rounded w-full" />
           <input name="order" placeholder="Order #" value={orderNum} onChange={(e) => setOrderNum(e.target.value)} required className="p-2 border rounded w-full" />
           <input name="po" placeholder="PO #" value={po} onChange={(e) => setPo(e.target.value)} className="p-2 border rounded w-full" />
           <input name="technician" placeholder="Technician/Provider" value={technician} onChange={(e) => setTechnician(e.target.value)} className="p-2 border rounded w-full" />

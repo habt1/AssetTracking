@@ -222,8 +222,7 @@ const updateLocation = async (location) => {
       locationZip = :locationZip,
       locationContact = :locationContact,
       locationContactEmail = :locationContactEmail,
-      locationContactPhone = :locationContactPhone,
-      deactivated = :deactivated`,
+      locationContactPhone = :locationContactPhone`,
     ExpressionAttributeValues: {
       ':locationName': location.locationName,
       ':locationAddress': location.locationAddress,
@@ -233,7 +232,6 @@ const updateLocation = async (location) => {
       ':locationContact': location.locationContact,
       ':locationContactEmail': location.locationContactEmail,
       ':locationContactPhone': location.locationContactPhone,
-      ':deactivated': location.deactivated,
     },
     ReturnValues: 'UPDATED_NEW'
   };

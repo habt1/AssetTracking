@@ -31,7 +31,6 @@ interface Location {
   locationContact: string;
   locationContactEmail: string;
   locationContactPhone: string;
-  deactivated: boolean;
   customerIdlocationId: string;
 }
 

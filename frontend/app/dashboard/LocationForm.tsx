@@ -17,7 +17,6 @@ interface Location {
   locationContact: string;
   locationContactEmail: string;
   locationContactPhone: string;
-  deactivated: boolean;
   customerIdlocationId: string;
 }
 
@@ -69,7 +68,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
       locationContact,
       locationContactEmail,
       locationContactPhone,
-      deactivated: false,
       customerIdlocationId: `${customer.customerId}|${locationName}|${locationAddress}|${locationCity}|${locationState}|${locationZip}|${locationContact}|${locationContactEmail}|${locationContactPhone}`
     };
     await axios.post('http://localhost:3001/addLocation', location, {
@@ -112,14 +110,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
     setChangedRows(prev => new Set(prev).add(index));
   };
 
-  const handleDeactivatedChange = (index: number, value: boolean) => {
-    const updatedLocations = [...locations];
-    updatedLocations[index].deactivated = value;
-    setLocations(updatedLocations);
-    setHasChanges(true);
-    setChangedRows(prev => new Set(prev).add(index));
-  };
-
   const toggleAddLocationForm = () => {
     setShowAddLocationForm(prev => !prev);
   };
@@ -153,33 +143,29 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
             <th className="border px-2 py-2" style={{ width: "10%" }}>Contact</th>
             <th className="border px-2 py-2" style={{ width: "10%" }}>Contact Email</th>
             <th className="border px-2 py-2" style={{ width: "10%" }}>Contact Phone</th>
-            <th className="border px-2 py-2" style={{ width: "1%" }}>Deactivated</th>
           </tr>
         </thead>
         <tbody>
           {locations.length === 0 ? (
             <tr>
-              <td colSpan={10} className="border px-4 py-2 text-center">No locations</td>
+              <td colSpan={9} className="border px-4 py-2 text-center">No locations</td>
             </tr>
           ) : (
             locations.map((location, index) => (
               <tr key={index}>
                 <td className="border px-2 py-2">
-                  {!location.deactivated && (
                     <button
                       onClick={() => setSelectedLocation(location)}
                       className="h-8 w-24 rounded-lg table-button bg-blue-600 font-semibold hover:bg-blue-700"
                     >
                       Select
                     </button>
-                  )}
                 </td>
                 <td className="border px-2 py-2">
                   <input
                     type="text"
                     value={location.locationName}
                     onChange={(e) => handleInputChange(index, 'locationName', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   />
                 </td>
@@ -188,7 +174,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     type="text"
                     value={location.locationAddress}
                     onChange={(e) => handleInputChange(index, 'locationAddress', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   />
                 </td>
@@ -197,7 +182,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     type="text"
                     value={location.locationCity}
                     onChange={(e) => handleInputChange(index, 'locationCity', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   />
                 </td>
@@ -205,7 +189,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                   <select
                     value={location.locationState}
                     onChange={(e) => handleInputChange(index, 'locationState', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   >
                     {usStatesAndCanadianProvinces.map((state) => (
@@ -220,7 +203,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     type="text"
                     value={location.locationZip}
                     onChange={(e) => handleInputChange(index, 'locationZip', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   />
                 </td>
@@ -229,7 +211,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     type="text"
                     value={location.locationContact}
                     onChange={(e) => handleInputChange(index, 'locationContact', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   />
                 </td>
@@ -238,7 +219,6 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     type="text"
                     value={location.locationContactEmail}
                     onChange={(e) => handleInputChange(index, 'locationContactEmail', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
                   />
                 </td>
@@ -247,15 +227,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
                     type="text"
                     value={location.locationContactPhone}
                     onChange={(e) => handleInputChange(index, 'locationContactPhone', e.target.value)}
-                    disabled={location.deactivated}
                     className="p-2 border rounded w-full"
-                  />
-                </td>
-                <td className="border px-2 py-2 text-center">
-                  <input
-                    type="checkbox"
-                    checked={location.deactivated}
-                    onChange={(e) => handleDeactivatedChange(index, e.target.checked)}
                   />
                 </td>
               </tr>
