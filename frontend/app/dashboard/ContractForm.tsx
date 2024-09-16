@@ -75,7 +75,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
   }, [userId, equipment]);
 
   const fetchContract = async () => {
-    const res = await axios.post('http://localhost:3001/getContractByEquipment', {
+    const res = await axios.post('${process.env.API_URL}/getContractByEquipment', {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId
     }, {
@@ -149,7 +149,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
 
   const handleSaveChanges = async () => {
     if (contract) {
-      await axios.post('http://localhost:3001/updateContract', { contracts: [contract] }, {
+      await axios.post('${process.env.API_URL}/updateContract', { contracts: [contract] }, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -174,7 +174,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     };
 
     // Delete existing contract if any
-    await axios.post('http://localhost:3001/deleteContractByEquipment', {
+    await axios.post('${process.env.API_URL}/deleteContractByEquipment', {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId
     }, {
@@ -184,7 +184,7 @@ export default function ContractForm({ userId, equipment, location, customer }: 
     });
 
     // Add the new contract
-    await axios.post('http://localhost:3001/addContract', contractItem, {
+    await axios.post('${process.env.API_URL}/addContract', contractItem, {
       headers: {
         'Content-Type': 'application/json',
       },

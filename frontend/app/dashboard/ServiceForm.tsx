@@ -79,7 +79,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
 
   const fetchServices = async () => {
-    const res = await axios.post('http://localhost:3001/getServicesByEquipment', {
+    const res = await axios.post('${process.env.API_URL}/getServicesByEquipment', {
       uniqueUserId: userId,
       equipmentId: equipment.locationIdequipmentId
     }, {
@@ -111,7 +111,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
       tracking,
       equipmentIdserviceId: `${equipment.locationIdequipmentId}|${serviceDateIn}|${rma}|${orderNum}|${po}|${technician}|${issue}|${serviceDateReceived}|${returnDate}|${shipMethod}|${tracking}`
     };
-    await axios.post('http://localhost:3001/addService', serviceItem, {
+    await axios.post('${process.env.API_URL}/addService', serviceItem, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -140,7 +140,7 @@ export default function ServiceForm({ userId, equipment, location, customer }: {
 
   const handleSaveChanges = async () => {
     const updatedServices = Array.from(changedRows).map(index => services[index]);
-    await axios.post('http://localhost:3001/updateService', { service: updatedServices }, {
+    await axios.post('${process.env.API_URL}/updateService', { service: updatedServices }, {
       headers: {
         'Content-Type': 'application/json',
       },

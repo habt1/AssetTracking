@@ -29,7 +29,7 @@ export default function Dashboard() {
     async function fetchInitialData() {
       const info = await getUserInfo();
       setUserId(info.id);
-      await axios.post('http://localhost:3001/addUser', info, {
+      await axios.post('${process.env.API_URL}/addUser', info, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -47,7 +47,7 @@ export default function Dashboard() {
   }, [userId]);
 
   const fetchCustomersAndSerials = async () => {
-    const customerRes = await axios.post('http://localhost:3001/getAllCustomers', {
+    const customerRes = await axios.post('${process.env.API_URL}/getAllCustomers', {
       uniqueUserId: userId
     }, {
       headers: {
@@ -56,7 +56,7 @@ export default function Dashboard() {
     });
     setAllCustomers(customerRes.data);
 
-    const serialRes = await axios.post('http://localhost:3001/getAllSerials', {
+    const serialRes = await axios.post('${process.env.API_URL}/getAllSerials', {
       uniqueUserId: userId
     }, {
       headers: {
@@ -76,7 +76,7 @@ export default function Dashboard() {
   const handleSaveCustomer = async (index: number) => {
     const customer = allCustomers[index];
     try {
-      await axios.post('http://localhost:3001/updateCustomer', {
+      await axios.post('${process.env.API_URL}/updateCustomer', {
         uniqueUserId: userId,
         customerId: customer.customerId,
         updates: customer
@@ -139,7 +139,7 @@ export default function Dashboard() {
       contactPhone: e.target.contactPhone.value || '',
     };
     try {
-      await axios.post('http://localhost:3001/addCustomer', customer, {
+      await axios.post('${process.env.API_URL}/addCustomer', customer, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -158,7 +158,7 @@ export default function Dashboard() {
   };
 
   const handleSelectSerial = async (serial: string) => {
-    const res = await axios.post('http://localhost:3001/getEquipmentBySerial', {
+    const res = await axios.post('${process.env.API_URL}/getEquipmentBySerial', {
       uniqueUserId: userId,
       serial
     }, {

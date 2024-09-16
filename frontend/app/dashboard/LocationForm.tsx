@@ -40,7 +40,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
   ];
 
   const fetchLocations = async () => {
-    const res = await axios.post('http://localhost:3001/getLocationsByCustomer', {
+    const res = await axios.post('${process.env.API_URL}/getLocationsByCustomer', {
       uniqueUserId: userId,
       customerId: customer.customerId
     }, {
@@ -70,7 +70,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
       locationContactPhone,
       customerIdlocationId: `${customer.customerId}|${locationName}|${locationAddress}|${locationCity}|${locationState}|${locationZip}|${locationContact}|${locationContactEmail}|${locationContactPhone}`
     };
-    await axios.post('http://localhost:3001/addLocation', location, {
+    await axios.post('${process.env.API_URL}/addLocation', location, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -91,7 +91,7 @@ export default function LocationForm({ userId, customer }: { userId: string, cus
 
   const handleSaveChanges = async () => {
     const updatedLocations = Array.from(changedRows).map(index => locations[index]);
-    await axios.post('http://localhost:3001/updateLocations', { locations: updatedLocations }, {
+    await axios.post('${process.env.API_URL}/updateLocations', { locations: updatedLocations }, {
       headers: {
         'Content-Type': 'application/json',
       },
