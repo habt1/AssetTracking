@@ -26,10 +26,11 @@ export default function Dashboard() {
   const [showAddCustomerForm, setShowAddCustomerForm] = useState(false);
 
   useEffect(() => {
+    console.log(`${process.env.NEXT_PUBLIC_API_URL}/addUser`)
     async function fetchInitialData() {
       const info = await getUserInfo();
       setUserId(info.id);
-      await axios.post('${process.env.API_URL}/addUser', info, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addUser`, info, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -47,7 +48,7 @@ export default function Dashboard() {
   }, [userId]);
 
   const fetchCustomersAndSerials = async () => {
-    const customerRes = await axios.post('${process.env.API_URL}/getAllCustomers', {
+    const customerRes = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/getAllCustomers`, {
       uniqueUserId: userId
     }, {
       headers: {
@@ -56,7 +57,7 @@ export default function Dashboard() {
     });
     setAllCustomers(customerRes.data);
 
-    const serialRes = await axios.post('${process.env.API_URL}/getAllSerials', {
+    const serialRes = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/getAllSerials`, {
       uniqueUserId: userId
     }, {
       headers: {
@@ -76,7 +77,7 @@ export default function Dashboard() {
   const handleSaveCustomer = async (index: number) => {
     const customer = allCustomers[index];
     try {
-      await axios.post('${process.env.API_URL}/updateCustomer', {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updateCustomer`, {
         uniqueUserId: userId,
         customerId: customer.customerId,
         updates: customer
@@ -139,7 +140,7 @@ export default function Dashboard() {
       contactPhone: e.target.contactPhone.value || '',
     };
     try {
-      await axios.post('${process.env.API_URL}/addCustomer', customer, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addCustomer`, customer, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -158,7 +159,7 @@ export default function Dashboard() {
   };
 
   const handleSelectSerial = async (serial: string) => {
-    const res = await axios.post('${process.env.API_URL}/getEquipmentBySerial', {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/getEquipmentBySerial`, {
       uniqueUserId: userId,
       serial
     }, {

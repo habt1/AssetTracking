@@ -68,7 +68,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
 
   const fetchEquipment = useCallback(async () => {
     try {
-      const res = await axios.post('${process.env.API_URL}/getEquipmentByLocation', {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/getEquipmentByLocation`, {
         uniqueUserId: userId,
         locationId: location.customerIdlocationId
       }, {
@@ -85,7 +85,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
 
   const fetchContractsByEquipment = useCallback(async (equipmentId: string) => {
     try {
-      const res = await axios.post('${process.env.API_URL}/getContractByEquipment', {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/getContractByEquipment`, {
         uniqueUserId: userId,
         equipmentId,
       }, {
@@ -125,7 +125,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
       locationIdequipmentId: `${location.customerIdlocationId}|${make}|${model}|${configuration}|${serial}|${purchaseDate}|${eolDate}`
     };
     try {
-      await axios.post('${process.env.API_URL}/addEquipment', equipmentItem, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addEquipment`, equipmentItem, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -147,7 +147,7 @@ export default function EquipmentForm({ userId, customer, location }: { userId: 
   const handleSaveChanges = async () => {
     const updatedEquipment = Array.from(changedRows).map(index => equipment[index]);
     try {
-      await axios.post('${process.env.API_URL}/updateEquipment', { equipment: updatedEquipment }, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updateEquipment`, { equipment: updatedEquipment }, {
         headers: {
           'Content-Type': 'application/json',
         },
